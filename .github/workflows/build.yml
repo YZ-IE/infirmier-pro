@@ -13,7 +13,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
       - name: Install deps and build
-        run: npm install && npm run build
+        run: npm install --legacy-peer-deps && npm run build
       - name: Setup Android
         run: npx cap add android && npx cap sync android
       - name: Build APK
