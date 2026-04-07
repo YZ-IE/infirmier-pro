@@ -17,7 +17,9 @@ jobs:
       - name: Sync Android
         run: npx cap sync android
       - name: Build APK
-        run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+        run: cd android && chmod +x gradlew && ./gradlew assembleDebug -Dorg.gradle.jvmargs="-Xmx2g -XX:+HeapDumpOnOutOfMemoryError" --no-daemon
+        env:
+          GRADLE_OPTS: "-Dfile.encoding=UTF-8"
       - uses: actions/upload-artifact@v4
         with:
           name: InfirmierPro.apk
