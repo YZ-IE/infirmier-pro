@@ -1,0 +1,6 @@
+{
+  "appId": "com.infirmierpro.app",
+  "appName": "InfirmierPro",
+  "webDir": "dist",
+  "server": { "androidScheme": "https" }
+}
