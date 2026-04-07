@@ -14,8 +14,8 @@ jobs:
           distribution: 'temurin'
       - name: Install deps and build
         run: npm install --legacy-peer-deps && npm run build
-      - name: Setup Android
-        run: npx cap add android && npx cap sync android
+      - name: Sync Android
+        run: npx cap sync android
       - name: Build APK
         run: cd android && chmod +x gradlew && ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
