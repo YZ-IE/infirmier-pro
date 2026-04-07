@@ -10,16 +10,16 @@ jobs:
           node-version: '20'
       - uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
       - name: Install deps and build
         run: npm install --legacy-peer-deps && npm run build
       - name: Sync Android
         run: npx cap sync android
+      - name: Update Gradle wrapper
+        run: cd android && ./gradlew wrapper --gradle-version=8.9 --distribution-type=bin
       - name: Build APK
-        run: cd android && chmod +x gradlew && ./gradlew assembleDebug -Dorg.gradle.jvmargs="-Xmx2g -XX:+HeapDumpOnOutOfMemoryError" --no-daemon
-        env:
-          GRADLE_OPTS: "-Dfile.encoding=UTF-8"
+        run: cd android && chmod +x gradlew && ./gradlew assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
           name: InfirmierPro.apk
