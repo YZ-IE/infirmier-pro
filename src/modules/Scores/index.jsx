@@ -13,10 +13,20 @@ import SOFA from './SOFA.jsx';
 import NEWS2 from './NEWS2.jsx';
 import CAM from './CAM.jsx';
 import Waterlow from './Waterlow.jsx';
+import GDS from './GDS.jsx';
+import NIHSS from './NIHSS.jsx';
+import Wells from './Wells.jsx';
+import CIWA from './CIWA.jsx';
+import PSI from './PSI.jsx';
 
 const SCORES = [
   { id:'glasgow', icon:'🧠', label:'Glasgow (GCS)', desc:'Évaluation de la conscience' },
   { id:'eva',     icon:'😣', label:'Douleur (EVA/EN)', desc:'Évaluation de la douleur' },
+  { id:'gds',     icon:'🫁', label:'GDS — Gaz du sang', desc:'pH · PaO₂ · PaCO₂ · HCO₃', badge:'NOUVEAU' },
+  { id:'nihss',   icon:'🩻', label:'NIHSS — AVC', desc:'Évaluation neurologique post-AVC', badge:'NOUVEAU' },
+  { id:'wells',   icon:'🩸', label:'Wells TVP / EP', desc:'Probabilité embolie · TVP', badge:'NOUVEAU' },
+  { id:'ciwa',    icon:'🍺', label:'CIWA-Ar — Sevrage alcool', desc:'Sévérité du sevrage éthylique', badge:'NOUVEAU' },
+  { id:'psi',     icon:'🫁', label:'PSI / PORT — Pneumonie', desc:'Sévérité · Décision hospit.', badge:'NOUVEAU' },
   { id:'qsofa',   icon:'🦠', label:'qSOFA', desc:'Dépistage rapide sepsis' },
   { id:'sofa',    icon:'🏥', label:'SOFA', desc:'Défaillance multi-organe réa' },
   { id:'news2',   icon:'📈', label:'NEWS2', desc:'Détérioration clinique précoce' },
@@ -29,7 +39,7 @@ const SCORES = [
   { id:'nas',     icon:'🩺', label:'NAS', desc:'Charge en soins infirmiers' },
 ];
 
-const map = { glasgow:<Glasgow/>, eva:<EVA/>, norton:<Norton/>, braden:<Braden/>, morse:<Morse/>, qsofa:<QSOFA/>, mmse:<MMSE/>, nas:<NAS/>, sofa:<SOFA/>, news2:<NEWS2/>, cam:<CAM/>, waterlow:<Waterlow/> };
+const map = { glasgow:<Glasgow/>, eva:<EVA/>, norton:<Norton/>, braden:<Braden/>, morse:<Morse/>, qsofa:<QSOFA/>, mmse:<MMSE/>, nas:<NAS/>, sofa:<SOFA/>, news2:<NEWS2/>, cam:<CAM/>, waterlow:<Waterlow/>, gds:<GDS/>, nihss:<NIHSS/>, wells:<Wells/>, ciwa:<CIWA/>, psi:<PSI/> };
 
 export default function Scores({ onBack }) {
   const [score, setScore] = useState(null);
@@ -55,7 +65,8 @@ export default function Scores({ onBack }) {
       </div>
       <div style={{ padding: '14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         {SCORES.map(sc => (
-          <div key={sc.id} onClick={() => setScore(sc.id)} style={{ background: T.surface, border: `1px solid ${C}33`, borderRadius: 10, padding: '14px 12px', cursor: 'pointer' }}>
+          <div key={sc.id} onClick={() => setScore(sc.id)} style={{ background: T.surface, border: `1px solid ${sc.badge ? C + '66' : C + '33'}`, borderRadius: 10, padding: '14px 12px', cursor: 'pointer', position: 'relative' }}>
+            {sc.badge && <span style={{ position: 'absolute', top: 8, right: 8, background: C + '22', color: C, fontSize: 8, fontFamily: 'monospace', padding: '2px 6px', borderRadius: 8 }}>{sc.badge}</span>}
             <div style={{ fontSize: 24, marginBottom: 7 }}>{sc.icon}</div>
             <div style={{ color: C, fontWeight: 700, fontSize: 13, marginBottom: 3 }}>{sc.label}</div>
             <div style={{ color: T.muted, fontSize: 11 }}>{sc.desc}</div>

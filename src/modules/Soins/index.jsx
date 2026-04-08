@@ -7,8 +7,10 @@ import PiccMidline from './PiccMidline.jsx';
 import PAC from './PAC.jsx';
 import KTA from './KTA.jsx';
 import Dialyse from './Dialyse.jsx';
+import Timers from './Timers.jsx';
 
 const SOINS_LIST = [
+  { id: 'timers',    icon: '⏱', label: 'Timers de soins', sub: 'Antiseptiques · Perfusions · Chronomètres simultanés', badge: 'NOUVEAU' },
   { id: 'pansements', icon: '🩹', label: 'Pansements', sub: 'Tableau décisionnel par stade · Types · Règles cliniques' },
   { id: 'piccmidline', icon: '🩸', label: 'Piccline / Midline', sub: 'Indications · Pose · Entretien · Surveillance · Comparatif' },
   { id: 'pac', icon: '🔵', label: 'PAC — Chambre implantable', sub: 'Ponction · Déponction · Aiguille Huber · Complications' },
@@ -17,6 +19,7 @@ const SOINS_LIST = [
 ];
 
 const MAP = {
+  timers:     <Timers />,
   pansements: <Pansements />,
   piccmidline: <PiccMidline />,
   pac: <PAC />,
@@ -55,10 +58,13 @@ export default function Soins({ onBack }) {
         </div>
         {SOINS_LIST.map(item => (
           <div key={item.id} onClick={() => setSoin(item.id)}
-            style={{ ...s.card, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14 }}>
+            style={{ ...s.card, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, border: `1px solid ${item.badge ? C + '66' : T.border}` }}>
             <span style={{ fontSize: 28 }}>{item.icon}</span>
             <div style={{ flex: 1 }}>
-              <div style={{ color: T.text, fontWeight: 700, fontSize: 14, marginBottom: 2 }}>{item.label}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                <span style={{ color: T.text, fontWeight: 700, fontSize: 14 }}>{item.label}</span>
+                {item.badge && <span style={{ background: C + '22', color: C, fontSize: 9, fontFamily: 'monospace', padding: '2px 7px', borderRadius: 10 }}>{item.badge}</span>}
+              </div>
               <div style={{ color: T.muted, fontSize: 12 }}>{item.sub}</div>
             </div>
             <span style={{ color: T.muted }}>›</span>
