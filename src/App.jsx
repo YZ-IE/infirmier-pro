@@ -104,6 +104,7 @@ export default function App() {
       case 'soins': return <Soins        onBack={() => setActive(null)} />;
       case 'orga':  return <Organisation onBack={() => setActive(null)} />;
       case 'form':  return <Formation    onBack={() => setActive(null)} />;
+      case 'aidemem': return <AideMemoire  onBack={() => setActive(null)} />;
       default: return null;
     }
   };
