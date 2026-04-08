@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.orga;
 
-import SBAR from './SBAR.jsx';
+import SBAR          from './SBAR.jsx';
 import Transmissions from './Transmissions.jsx';
 import PlanningJournee from './PlanningJournee.jsx';
+import NormesBio     from './NormesBio.jsx';
 
 const OUTILS = [
   {
@@ -28,12 +29,20 @@ const OUTILS = [
     sub: 'Donnée → Lien → Action · Historique 24h',
     badge: null,
   },
+  {
+    id: 'normes',
+    icon: '🔬',
+    label: 'Normes biologiques',
+    sub: 'Hémato · Biochimie · GDS · Enzymes · Alertes',
+    badge: null,
+  },
 ];
 
 const MAP = {
   planning:      <PlanningJournee />,
   sbar:          <SBAR />,
   transmissions: <Transmissions />,
+  normes:        <NormesBio />,
 };
 
 export default function Organisation({ onBack }) {
@@ -79,7 +88,7 @@ export default function Organisation({ onBack }) {
         <div style={{ background: C + '18', border: `1px solid ${C}44`, borderRadius: 8, padding: '10px 14px', marginBottom: 14 }}>
           <div style={{ color: C, fontWeight: 700, fontSize: 13 }}>📋 Outils de coordination</div>
           <div style={{ color: T.muted, fontSize: 12, marginTop: 3 }}>
-            Planning, transmissions et communications structurées pour optimiser la prise en charge.
+            Planning, transmissions, normes biologiques et communications structurées.
           </div>
         </div>
 
