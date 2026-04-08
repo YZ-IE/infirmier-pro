@@ -8,23 +8,26 @@ import PAC from './PAC.jsx';
 import KTA from './KTA.jsx';
 import Dialyse from './Dialyse.jsx';
 import Timers from './Timers.jsx';
+import ChecklistPreOp from './ChecklistPreOp.jsx';
 
 const SOINS_LIST = [
-  { id: 'timers',    icon: '⏱', label: 'Timers de soins', sub: 'Antiseptiques · Perfusions · Chronomètres simultanés', badge: 'NOUVEAU' },
-  { id: 'pansements', icon: '🩹', label: 'Pansements', sub: 'Tableau décisionnel par stade · Types · Règles cliniques' },
-  { id: 'piccmidline', icon: '🩸', label: 'Piccline / Midline', sub: 'Indications · Pose · Entretien · Surveillance · Comparatif' },
-  { id: 'pac', icon: '🔵', label: 'PAC — Chambre implantable', sub: 'Ponction · Déponction · Aiguille Huber · Complications' },
-  { id: 'kta', icon: '🔴', label: 'KTA — Cathéter artériel', sub: 'PAI · Prélèvements GDS · Sécurité · Test d\'Allen' },
-  { id: 'dialyse', icon: '🫀', label: 'Dialyse', sub: 'HD · DP · EERC — Principes · Accès vasculaires · Surveillance' },
+  { id: 'timers',      icon: '⏱', label: 'Timers de soins',           sub: 'Antiseptiques · Perfusions · Chronomètres simultanés', badge: 'NOUVEAU' },
+  { id: 'checklistop', icon: '✅', label: 'Checklist bloc opératoire', sub: 'OMS Sign In · Time Out · Sign Out', badge: 'NOUVEAU' },
+  { id: 'pansements',  icon: '🩹', label: 'Pansements',                sub: 'Tableau décisionnel par stade · Types · Règles cliniques' },
+  { id: 'piccmidline', icon: '🩸', label: 'Piccline / Midline',         sub: 'Indications · Pose · Entretien · Surveillance · Comparatif' },
+  { id: 'pac',         icon: '🔵', label: 'PAC — Chambre implantable', sub: 'Ponction · Déponction · Aiguille Huber · Complications' },
+  { id: 'kta',         icon: '🔴', label: 'KTA — Cathéter artériel',   sub: 'PAI · Prélèvements GDS · Sécurité · Test d\'Allen' },
+  { id: 'dialyse',     icon: '🫀', label: 'Dialyse',                   sub: 'HD · DP · EERC — Principes · Accès vasculaires · Surveillance' },
 ];
 
 const MAP = {
-  timers:     <Timers />,
-  pansements: <Pansements />,
+  timers:      <Timers />,
+  checklistop: <ChecklistPreOp />,
+  pansements:  <Pansements />,
   piccmidline: <PiccMidline />,
-  pac: <PAC />,
-  kta: <KTA />,
-  dialyse: <Dialyse />,
+  pac:         <PAC />,
+  kta:         <KTA />,
+  dialyse:     <Dialyse />,
 };
 
 export default function Soins({ onBack }) {

@@ -18,15 +18,21 @@ import NIHSS from './NIHSS.jsx';
 import Wells from './Wells.jsx';
 import CIWA from './CIWA.jsx';
 import PSI from './PSI.jsx';
+import PHQ9HAD from './PHQ9HAD.jsx';
+import ChildPugh from './ChildPugh.jsx';
+import RankinCockcroft from './RankinCockcroft.jsx';
 
 const SCORES = [
   { id:'glasgow', icon:'🧠', label:'Glasgow (GCS)', desc:'Évaluation de la conscience' },
-  { id:'eva',     icon:'😣', label:'Douleur (EVA/EN)', desc:'Évaluation de la douleur' },
+  { id:'eva',     icon:'😊', label:'Douleur (EVA/EN/Faces)', desc:'Smileys · Numérique · Analogique · FLACC' },
   { id:'gds',     icon:'🫁', label:'GDS — Gaz du sang', desc:'pH · PaO₂ · PaCO₂ · HCO₃', badge:'NOUVEAU' },
   { id:'nihss',   icon:'🩻', label:'NIHSS — AVC', desc:'Évaluation neurologique post-AVC', badge:'NOUVEAU' },
   { id:'wells',   icon:'🩸', label:'Wells TVP / EP', desc:'Probabilité embolie · TVP', badge:'NOUVEAU' },
   { id:'ciwa',    icon:'🍺', label:'CIWA-Ar — Sevrage alcool', desc:'Sévérité du sevrage éthylique', badge:'NOUVEAU' },
-  { id:'psi',     icon:'🫁', label:'PSI / PORT — Pneumonie', desc:'Sévérité · Décision hospit.', badge:'NOUVEAU' },
+  { id:'psi',     icon:'🌬', label:'PSI / PORT — Pneumonie', desc:'Sévérité · Décision hospit.', badge:'NOUVEAU' },
+  { id:'phq9',    icon:'🧩', label:'PHQ-9 · HAD', desc:'Dépression · Anxiété', badge:'NOUVEAU' },
+  { id:'childpugh',icon:'🫀', label:'Child-Pugh · MELD', desc:'Cirrhose · Greffe hépatique', badge:'NOUVEAU' },
+  { id:'rankin',  icon:'🦯', label:'Rankin · Cockcroft', desc:'Séquelles AVC · Clairance IR', badge:'NOUVEAU' },
   { id:'qsofa',   icon:'🦠', label:'qSOFA', desc:'Dépistage rapide sepsis' },
   { id:'sofa',    icon:'🏥', label:'SOFA', desc:'Défaillance multi-organe réa' },
   { id:'news2',   icon:'📈', label:'NEWS2', desc:'Détérioration clinique précoce' },
@@ -39,7 +45,7 @@ const SCORES = [
   { id:'nas',     icon:'🩺', label:'NAS', desc:'Charge en soins infirmiers' },
 ];
 
-const map = { glasgow:<Glasgow/>, eva:<EVA/>, norton:<Norton/>, braden:<Braden/>, morse:<Morse/>, qsofa:<QSOFA/>, mmse:<MMSE/>, nas:<NAS/>, sofa:<SOFA/>, news2:<NEWS2/>, cam:<CAM/>, waterlow:<Waterlow/>, gds:<GDS/>, nihss:<NIHSS/>, wells:<Wells/>, ciwa:<CIWA/>, psi:<PSI/> };
+const map = { glasgow:<Glasgow/>, eva:<EVA/>, norton:<Norton/>, braden:<Braden/>, morse:<Morse/>, qsofa:<QSOFA/>, mmse:<MMSE/>, nas:<NAS/>, sofa:<SOFA/>, news2:<NEWS2/>, cam:<CAM/>, waterlow:<Waterlow/>, gds:<GDS/>, nihss:<NIHSS/>, wells:<Wells/>, ciwa:<CIWA/>, psi:<PSI/>, phq9:<PHQ9HAD/>, childpugh:<ChildPugh/>, rankin:<RankinCockcroft/> };
 
 export default function Scores({ onBack }) {
   const [score, setScore] = useState(null);

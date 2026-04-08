@@ -8,6 +8,7 @@ import Reconstitution from './Reconstitution.jsx';
 import CompatibilitesIV from './CompatibilitesIV.jsx';
 import Nutrition from './Nutrition.jsx';
 import Pediatrique from './Pediatrique.jsx';
+import OpioidConverter from './OpioidConverter.jsx';
 
 const TOOLS = [
   { id:'doses',  icon:'🧮', label:'Calcul de doses',              desc:'Dose/kg · Dose/m²· Dose/h' },
@@ -18,6 +19,7 @@ const TOOLS = [
   { id:'compat', icon:'🔗', label:'Compatibilités IV en Y',       desc:'Tableau de compatibilité' },
   { id:'nutri',  icon:'🥗', label:'Nutrition parentérale/entérale', desc:'Harris-Benedict · Protéines · Osmolarité', badge:'NOUVEAU' },
   { id:'pedia',  icon:'👶', label:'Calculateur pédiatrique',      desc:'Doses mg/kg · IOT · Matériel', badge:'NOUVEAU' },
+  { id:'opio',   icon:'💊', label:'Convertisseur opioïdes',       desc:'Rotation · Équianalgésie · Fentanyl patch', badge:'NOUVEAU' },
 ];
 
 export default function Iatrogenique({ onBack }) {
@@ -31,6 +33,7 @@ export default function Iatrogenique({ onBack }) {
   if (tool === 'compat') return <CompatibilitesIV onBack={() => setTool(null)} />;
   if (tool === 'nutri')  return <Nutrition        onBack={() => setTool(null)} />;
   if (tool === 'pedia')  return <Pediatrique      onBack={() => setTool(null)} />;
+  if (tool === 'opio')   return <OpioidConverter  onBack={() => setTool(null)} />;
 
   return (
     <div style={{ minHeight:'100vh', background:T.bg }}>
