@@ -6,11 +6,13 @@ import Scores from './modules/Scores/index.jsx';
 import Soins from './modules/Soins/index.jsx';
 import Organisation from './modules/Organisation/index.jsx';
 import Formation from './modules/Formation/index.jsx';
+import ECG from './modules/ECG/index.jsx';
 
 const MODULES = [
-  { id:'iatr',  label:'Iatrogénie',   icon:'💊', color:T.iatr,  desc:'Doses · Débits · SAP · Interactions' },
+  { id:'iatr',  label:'Iatrogénie',   icon:'💊', color:T.iatr,  desc:'Doses · Débits · SAP · Interactions · Opioïdes' },
   { id:'urg',   label:'Urgences',     icon:'🚨', color:T.urg,   desc:'RCP · AVC · Anaphylaxie · Sepsis' },
-  { id:'score', label:'Scores',       icon:'📊', color:T.score, desc:'Glasgow · EVA · Norton · qSOFA · GDS · NIHSS' },
+  { id:'score', label:'Scores',       icon:'📊', color:T.score, desc:'Glasgow · EVA · GDS · NIHSS · Wells · PHQ-9' },
+  { id:'ecg',   label:'ECG',          icon:'💓', color:'#00e676', desc:'Rythmes · Tracés interactifs · Quiz · Assistant IA', badge:'NOUVEAU' },
   { id:'soins', label:'Soins',        icon:'💉', color:T.soins, desc:'Pansements · PAC · Piccline · Dialyse · Timers' },
   { id:'orga',  label:'Organisation', icon:'📋', color:T.orga,  desc:'Planning · SBAR · Transmissions' },
   { id:'form',  label:'Formation',    icon:'🎓', color:T.form,  desc:'Quiz · Cas cliniques · Assistant IA' },
@@ -96,6 +98,7 @@ export default function App() {
       case 'iatr':  return <Iatrogenique onBack={() => setActive(null)} />;
       case 'urg':   return <Urgences     onBack={() => setActive(null)} />;
       case 'score': return <Scores       onBack={() => setActive(null)} />;
+      case 'ecg':   return <ECG          onBack={() => setActive(null)} />;
       case 'soins': return <Soins        onBack={() => setActive(null)} />;
       case 'orga':  return <Organisation onBack={() => setActive(null)} />;
       case 'form':  return <Formation    onBack={() => setActive(null)} />;
@@ -164,10 +167,11 @@ export default function App() {
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
           {MODULES.map(m => (
             <div key={m.id} onClick={() => setActive(m.id)} style={{
-              background:'#1e293b', border:`1px solid ${m.color}44`,
+              background:'#1e293b', border:`1px solid ${m.badge ? m.color+'88' : m.color+'44'}`,
               borderRadius:12, padding:'16px 14px', cursor:'pointer',
-              transition:'all 0.2s', boxShadow:`0 0 16px ${m.color}11`
+              transition:'all 0.2s', boxShadow:`0 0 16px ${m.color}11`, position:'relative'
             }}>
+              {m.badge && <span style={{position:'absolute',top:8,right:8,background:m.color+'22',color:m.color,fontSize:8,fontFamily:'monospace',padding:'2px 6px',borderRadius:8}}>{m.badge}</span>}
               <div style={{ fontSize:28, marginBottom:8 }}>{m.icon}</div>
               <div style={{ color:m.color, fontWeight:700, fontSize:14, marginBottom:4 }}>{m.label}</div>
               <div style={{ color:T.muted, fontSize:11, lineHeight:1.5 }}>{m.desc}</div>
