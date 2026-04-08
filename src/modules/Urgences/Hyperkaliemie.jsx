@@ -4,7 +4,7 @@ export default function Hyperkaliemie() {
   return (
     <div style={{ padding: '14px' }}>
       <div style={{ background: C+'18', border: `1px solid ${C}44`, borderRadius: 10, padding: '12px 14px', marginBottom: 14 }}>
-        <div style={{ color: C, fontWeight: 700, fontSize: 14 }}>⚡ Hyperkaliémie — Urgence vitale si K⁺ > 6,5 mmol/L</div>
+        <div style={{ color: C, fontWeight: 700, fontSize: 14 }}>⚡ Hyperkaliémie — Urgence vitale si K⁺ &gt; 6,5 mmol/L</div>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 4 }}>Appeler le médecin immédiatement · Scope · ECG en urgence</div>
       </div>
 

@@ -7,6 +7,7 @@ import Soins from './modules/Soins/index.jsx';
 import Organisation from './modules/Organisation/index.jsx';
 import Formation from './modules/Formation/index.jsx';
 import ECG from './modules/ECG/index.jsx';
+import AideMemoire from './modules/AideMemoire/index.jsx';
 
 const MODULES = [
   { id:'iatr',  label:'Iatrogénie',   icon:'💊', color:T.iatr,  desc:'Doses · Débits · SAP · Interactions · Opioïdes' },
@@ -16,6 +17,7 @@ const MODULES = [
   { id:'soins', label:'Soins',        icon:'💉', color:T.soins, desc:'Pansements · PAC · Piccline · Dialyse · Timers' },
   { id:'orga',  label:'Organisation', icon:'📋', color:T.orga,  desc:'Planning · SBAR · Transmissions' },
   { id:'form',  label:'Formation',    icon:'🎓', color:T.form,  desc:'Quiz · Cas cliniques · Assistant IA' },
+  { id: 'aidemem', label: 'Aide-Mémoire', color: '#6366f1', icon: '📋' },
 ];
 
 // Index de recherche globale : (terme → module + sous-section)
