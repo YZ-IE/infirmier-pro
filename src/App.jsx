@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
 import { T } from './theme.js';
-import Iatrogenique  from './modules/Iatrogenique/index.jsx';
-import Urgences      from './modules/Urgences/index.jsx';
-import Scores        from './modules/Scores/index.jsx';
-import Soins         from './modules/Soins/index.jsx';        // ← WAS: SoinsTechniques
-import Organisation  from './modules/Organisation/index.jsx';
-import Formation     from './modules/Formation/index.jsx';
+import Iatrogenique from './modules/Iatrogenique/index.jsx';
+import Urgences from './modules/Urgences/index.jsx';
+import Scores from './modules/Scores/index.jsx';
+import Soins from './modules/Soins/index.jsx';          // ← nouveau module Soins
+import Organisation from './modules/Organisation/index.jsx';
+import Formation from './modules/Formation/index.jsx';
 
 const MODULES = [
   { id:'iatr',  label:'Iatrogénie',   icon:'💊', color:T.iatr,  desc:'Doses · Débits · SAP · Interactions' },
   { id:'urg',   label:'Urgences',     icon:'🚨', color:T.urg,   desc:'RCP · AVC · Anaphylaxie · Sepsis' },
   { id:'score', label:'Scores',       icon:'📊', color:T.score, desc:'Glasgow · EVA · Norton · qSOFA' },
-  { id:'soins', label:'Soins',        icon:'💉', color:T.soins, desc:'Pansements · Piccline · PAC · KTA · Dialyse' },
+  { id:'soins', label:'Soins',        icon:'💉', color:T.soins, desc:'Pansements · PAC · Piccline · Dialyse' },
   { id:'orga',  label:'Organisation', icon:'📋', color:T.orga,  desc:'Planning · SBAR · Transmissions' },
   { id:'form',  label:'Formation',    icon:'🎓', color:T.form,  desc:'Quiz · Cas cliniques · Assistant IA' },
 ];
@@ -45,7 +45,7 @@ export default function App() {
       case 'iatr':  return <Iatrogenique onBack={() => setActive(null)} />;
       case 'urg':   return <Urgences     onBack={() => setActive(null)} />;
       case 'score': return <Scores       onBack={() => setActive(null)} />;
-      case 'soins': return <Soins        onBack={() => setActive(null)} />;  // ← WAS: SoinsTechniques
+      case 'soins': return <Soins        onBack={() => setActive(null)} />;   // ← Soins remplace SoinsTechniques
       case 'orga':  return <Organisation onBack={() => setActive(null)} />;
       case 'form':  return <Formation    onBack={() => setActive(null)} />;
       default: return null;
