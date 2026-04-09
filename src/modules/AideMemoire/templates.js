@@ -1,13 +1,9 @@
 /**
- * templates.js — Aide-Mémoire
- * Templates de spécialités avec champs pré-configurés
+ * templates.js — Aide-Mémoire v3
  *
- * Types :  'text' | 'select' | 'boolean' | 'number'
- * Persistance :
- *   true  → par séjour (conservé jusqu'à la sortie du patient)
- *   false → journalier (réinitialisé chaque jour ou sur demande)
- * Catégories :
- *   'flag' | 'info' | 'observation' | 'constante'
+ * Règle de catégorisation :
+ *   persistent: true  → état du patient ou date (séjour)
+ *   persistent: false → soin ou surveillance (journalier)
  */
 
 export const SPECIALTIES = [
@@ -19,98 +15,131 @@ export const SPECIALTIES = [
   { id: 'custom',    label: '⚙️ Personnalisé',    color: '#64748b' },
 ];
 
+// Flags communs — tous liés à l'état du patient → persistent: true
+// sauf NPO et antalgie qui sont des prescriptions journalières
 const COMMON_FLAGS = [
-  { id: 'allergie',  label: '⚠️ Allergie',       type: 'text',    persistent: true,  category: 'flag' },
-  { id: 'chute',     label: '🔴 Risque chute',    type: 'boolean', persistent: true,  category: 'flag' },
-  { id: 'isolement', label: '🟡 Isolement',        type: 'select',  persistent: true,  category: 'flag',
+  { id: 'allergie',  label: '⚠️ Allergie',    type: 'text',    persistent: true,  category: 'flag' },
+  { id: 'chute',     label: '🔴 Risque chute', type: 'boolean', persistent: true,  category: 'flag' },
+  { id: 'isolement', label: '🟡 Isolement',     type: 'select',  persistent: true,  category: 'flag',
     options: ['Contact', 'Gouttelettes', 'Air', 'Protecteur'] },
-  { id: 'npo',       label: '🚫 À jeun (NPO)',    type: 'boolean', persistent: false, category: 'flag' },
-  { id: 'douleur',   label: '💊 Antalgie',         type: 'select',  persistent: false, category: 'flag',
+  { id: 'npo',       label: '🚫 À jeun (NPO)', type: 'boolean', persistent: false, category: 'flag' },
+  { id: 'douleur',   label: '💊 Antalgie',      type: 'select',  persistent: false, category: 'flag',
     options: ['Palier 1', 'Palier 2', 'Palier 3 LP', 'Palier 3 sb'] },
 ];
 
 export const TEMPLATES = {
+
   traumato: { fields: [
     ...COMMON_FLAGS,
-    { id: 'j_postop',  label: 'J post-op',        type: 'number',  persistent: false, category: 'info' },
-    { id: 'rdv_chir',  label: 'RDV Chirurgie',     type: 'text',    persistent: true,  category: 'info' },
-    { id: 'appui',     label: 'Appui',              type: 'select',  persistent: true,  category: 'observation',
+    // ── Séjour (état / date) ──
+    { id: 'rdv_chir',   label: 'RDV Chirurgie',     type: 'text',    persistent: true,  category: 'info' },
+    { id: 'appui',      label: 'Appui autorisé',     type: 'select',  persistent: true,  category: 'info',
       options: ['Total', 'Partiel', 'Non autorisé', 'À préciser'] },
-    { id: 'zimmer',    label: 'Zimmer / Attelle',   type: 'text',    persistent: true,  category: 'observation' },
-    { id: 'avq',       label: 'AVQ / Soins',        type: 'select',  persistent: false, category: 'observation',
+    { id: 'zimmer',     label: 'Zimmer / Attelle',   type: 'text',    persistent: true,  category: 'info' },
+    { id: 'hbpm',       label: 'HBPM prescrit',      type: 'boolean', persistent: true,  category: 'info' },
+    // ── Journalier (soins / surveillance) ──
+    { id: 'j_postop',   label: 'J post-op',           type: 'number',  persistent: false, category: 'observation' },
+    { id: 'avq',        label: 'AVQ / Autonomie',     type: 'select',  persistent: true,  category: 'observation',
       options: ['Autonome', 'Aide partielle', 'Aide totale'] },
-    { id: 'hbpm',      label: 'HBPM',               type: 'boolean', persistent: true,  category: 'observation' },
-    { id: 'pst',       label: 'Pansement',           type: 'boolean', persistent: false, category: 'observation' },
-    { id: 'constantes',label: 'Constantes',          type: 'text',    persistent: false, category: 'constante' },
+    { id: 'pst',        label: 'Pansement réalisé',   type: 'boolean', persistent: false, category: 'observation' },
+    { id: 'constantes', label: 'Constantes',           type: 'text',    persistent: false, category: 'constante' },
   ]},
 
   neuro: { fields: [
     ...COMMON_FLAGS,
-    { id: 'fausses_routes', label: '⚡ Fausses routes', type: 'boolean', persistent: true,  category: 'flag' },
-    { id: 'cognition',      label: 'Troubles cognitifs', type: 'boolean', persistent: true,  category: 'flag' },
-    { id: 'const_freq',     label: 'Fréquence constantes', type: 'select', persistent: true, category: 'constante',
-      options: ['1×/jour', '3×/jour', 'Toutes les 4h', 'Continue'] },
-    { id: 'continence',     label: 'Continence',          type: 'select',  persistent: false, category: 'observation',
+    // ── Séjour (état du patient) ──
+    { id: 'fausses_routes', label: '⚡ Fausses routes',    type: 'boolean', persistent: true,  category: 'flag' },
+    { id: 'cognition',      label: 'Troubles cognitifs',   type: 'boolean', persistent: true,  category: 'flag' },
+    { id: 'continence',     label: 'Continence',           type: 'select',  persistent: true,  category: 'info',
       options: ['Continent', 'Incontinent', 'Protection', 'Sondage'] },
-    { id: 'motricite',      label: 'Mobilité',             type: 'select',  persistent: false, category: 'observation',
+    { id: 'motricite',      label: 'Mobilité',             type: 'select',  persistent: true,  category: 'info',
       options: ['Autonome', 'Aide humaine', 'Fauteuil', 'Alité'] },
-    { id: 'contention',     label: 'Contention',           type: 'boolean', persistent: false, category: 'observation' },
-    { id: 'regime',         label: 'Régime',               type: 'select',  persistent: true,  category: 'observation',
+    { id: 'regime',         label: 'Régime alimentaire',   type: 'select',  persistent: true,  category: 'info',
       options: ['Normal', 'Haché fin', 'Mixé', 'Liquide épaissi', 'NE'] },
+    { id: 'const_freq',     label: 'Fréquence constantes', type: 'select',  persistent: true,  category: 'info',
+      options: ['1×/jour', '3×/jour', 'Toutes les 4h', 'Continue'] },
+    // ── Journalier (soins / surveillance) ──
+    { id: 'contention',     label: 'Contention active',    type: 'boolean', persistent: false, category: 'observation' },
     { id: 'constantes',     label: 'Constantes',           type: 'text',    persistent: false, category: 'constante' },
   ]},
 
   chirurgie: { fields: [
     ...COMMON_FLAGS,
-    { id: 'stomie',   label: '🩺 Stomie',          type: 'boolean', persistent: true,  category: 'flag' },
-    { id: 'j_postop', label: 'J post-op',           type: 'number',  persistent: false, category: 'info' },
-    { id: 'rdv_chir', label: 'RDV Chirurgie',        type: 'text',    persistent: true,  category: 'info' },
-    { id: 'appui',    label: 'Appui',                type: 'select',  persistent: false, category: 'observation',
+    // ── Séjour (état / date) ──
+    { id: 'stomie',     label: '🩺 Stomie',             type: 'boolean', persistent: true,  category: 'flag' },
+    { id: 'rdv_chir',   label: 'RDV Chirurgie',         type: 'text',    persistent: true,  category: 'info' },
+    { id: 'appui',      label: 'Appui autorisé',         type: 'select',  persistent: true,  category: 'info',
       options: ['Total', 'Partiel', 'Non autorisé'] },
-    { id: 'drain',    label: 'Drain',                type: 'text',    persistent: false, category: 'observation' },
-    { id: 'transit',  label: 'Reprise transit',      type: 'select',  persistent: false, category: 'observation',
+    { id: 'drain',      label: 'Drain en place',         type: 'text',    persistent: true,  category: 'info' },
+    // ── Journalier (soins / surveillance) ──
+    { id: 'j_postop',   label: 'J post-op',              type: 'number',  persistent: false, category: 'observation' },
+    { id: 'transit',    label: 'Reprise transit',         type: 'select',  persistent: false, category: 'observation',
       options: ['Non', 'Gaz', 'Selles'] },
-    { id: 'avq',      label: 'AVQ / Soins',          type: 'select',  persistent: false, category: 'observation',
+    { id: 'avq',        label: 'AVQ / Autonomie',     type: 'select',  persistent: true,  category: 'observation',
       options: ['Autonome', 'Aide partielle', 'Aide totale'] },
-    { id: 'pst',      label: 'Pansement',             type: 'boolean', persistent: false, category: 'observation' },
-    { id: 'constantes',label: 'Constantes',           type: 'text',    persistent: false, category: 'constante' },
+    { id: 'pst',        label: 'Pansement réalisé',       type: 'boolean', persistent: false, category: 'observation' },
+    { id: 'constantes', label: 'Constantes',              type: 'text',    persistent: false, category: 'constante' },
   ]},
 
   medecine: { fields: [
     ...COMMON_FLAGS,
-    { id: 'rdv_ext',    label: 'RDV / Examens',          type: 'text',    persistent: true,  category: 'info' },
-    { id: 'bilan_bio',  label: 'Bilan bio à récupérer',  type: 'text',    persistent: false, category: 'info' },
-    { id: 'oxygenation',label: 'Oxygénothérapie',        type: 'text',    persistent: false, category: 'observation' },
-    { id: 'diurese',    label: 'Diurèse surveillée',     type: 'boolean', persistent: false, category: 'observation' },
-    { id: 'poids',      label: 'Poids (kg)',              type: 'number',  persistent: false, category: 'constante' },
-    { id: 'constantes', label: 'Constantes',              type: 'text',    persistent: false, category: 'constante' },
+    // ── Séjour (état / date) ──
+    { id: 'rdv_ext',     label: 'RDV / Examens',          type: 'text',    persistent: true,  category: 'info' },
+    // ── Journalier (soins / surveillance) ──
+    { id: 'bilan_bio',   label: 'Bilan bio à récupérer',  type: 'text',    persistent: false, category: 'observation' },
+    { id: 'oxygenation', label: 'Oxygénothérapie',        type: 'text',    persistent: false, category: 'observation' },
+    { id: 'diurese',     label: 'Diurèse surveillée',     type: 'boolean', persistent: false, category: 'observation' },
+    { id: 'poids',       label: 'Poids du jour (kg)',     type: 'number',  persistent: false, category: 'constante' },
+    { id: 'constantes',  label: 'Constantes',             type: 'text',    persistent: false, category: 'constante' },
   ]},
 
   pediatrie: { fields: [
     ...COMMON_FLAGS,
-    { id: 'poids',        label: 'Poids (kg)',          type: 'number',  persistent: true,  category: 'info' },
-    { id: 'flacc',        label: 'Douleur FLACC /10',   type: 'number',  persistent: false, category: 'constante' },
-    { id: 'alimentation', label: 'Alimentation',         type: 'select',  persistent: false, category: 'observation',
+    // ── Séjour (état) ──
+    { id: 'poids_ref',    label: 'Poids de référence (kg)', type: 'number', persistent: true,  category: 'info' },
+    { id: 'alimentation', label: 'Mode alimentaire',         type: 'select', persistent: true,  category: 'info',
       options: ['Sein', 'Biberon', 'Mixte', 'NGT', 'Autonome'] },
-    { id: 'accompagnant', label: 'Accompagnant présent', type: 'boolean', persistent: false, category: 'observation' },
-    { id: 'avq',          label: 'AVQ / Soins',          type: 'select',  persistent: false, category: 'observation',
+    // ── Journalier ──
+    { id: 'flacc',        label: 'Score douleur FLACC',     type: 'number', persistent: false, category: 'constante' },
+    { id: 'accompagnant', label: 'Accompagnant présent',     type: 'boolean',persistent: false, category: 'observation' },
+    { id: 'avq',        label: 'AVQ / Autonomie',     type: 'select',  persistent: true,  category: 'observation',
       options: ['Parent', 'Aide IDE', 'Autonome'] },
-    { id: 'constantes',   label: 'Constantes',           type: 'text',    persistent: false, category: 'constante' },
+    { id: 'constantes',   label: 'Constantes',               type: 'text',   persistent: false, category: 'constante' },
   ]},
 
   custom: { fields: [...COMMON_FLAGS] },
 };
 
-/** Retourne les champs d'un template (copie pour éviter les mutations) */
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
 export function getTemplateFields(specialtyId) {
   const tpl = TEMPLATES[specialtyId] || TEMPLATES.custom;
-  return tpl.fields.map(f => ({
-    ...f,
-    options: f.options ? [...f.options] : undefined,
-  }));
+  return tpl.fields.map(f => ({ ...f, options: f.options ? [...f.options] : undefined }));
 }
 
-/** Retourne la spécialité par id */
 export function getSpecialty(id) {
   return SPECIALTIES.find(s => s.id === id) || SPECIALTIES[SPECIALTIES.length - 1];
+}
+
+/**
+ * Retourne une liste alphabétique dédupliquée de tous les champs
+ * de toutes les spécialités — pour la sélection de centres d'intérêt
+ */
+export function getAllFieldsAlpha() {
+  const seen   = new Set();
+  const result = [];
+  for (const tpl of Object.values(TEMPLATES)) {
+    for (const f of tpl.fields) {
+      if (!seen.has(f.id)) {
+        seen.add(f.id);
+        result.push({ ...f, options: f.options ? [...f.options] : undefined });
+      }
+    }
+  }
+  // Tri alphabétique en ignorant les emojis
+  return result.sort((a, b) => {
+    const la = a.label.replace(/[^\w\s]/gu, '').trim();
+    const lb = b.label.replace(/[^\w\s]/gu, '').trim();
+    return la.localeCompare(lb, 'fr');
+  });
 }

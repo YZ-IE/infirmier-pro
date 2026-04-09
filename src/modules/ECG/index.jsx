@@ -503,79 +503,11 @@ function QuizTab() {
   );
 }
 
-// ── Onglet Assistant IA ──────────────────────────────────────────────────────
-async function askClaude(messages) {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      model:'claude-sonnet-4-20250514', max_tokens:1000,
-      system:"Tu es un expert en cardiologie et lecture d'ECG. Tu aides des infirmiers à apprendre l'électrocardiographie. Tes réponses sont claires, structurées et pédagogiques. Réponds toujours en français.",
-      messages
-    })
-  });
-  const data = await res.json();
-  return data.content?.find(b=>b.type==='text')?.text || 'Erreur de réponse.';
-}
-
-function AssistantTab() {
-  const [messages, setMessages] = useState([{role:'assistant',text:"Bonjour ! Posez-moi toutes vos questions sur l'ECG : interprétation, pathologies, mesures, actions infirmières…"}]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const bottomRef = useRef(null);
-  const suggestions = ["Comment différencier FA et flutter ?","Quand s'inquiéter d'un QT long ?","Expliquez le bloc de branche droit","Comment reconnaître un SCA ?","Préparer une cardioversion électrique ?"];
-
-  useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:'smooth'});},[messages,loading]);
-
-  const send = async text => {
-    if (!text.trim()||loading) return;
-    const userMsg={role:'user',text};
-    const newMsgs=[...messages,userMsg];
-    setMessages(newMsgs); setInput(''); setLoading(true);
-    try {
-      const history=newMsgs.map(m=>({role:m.role==='assistant'?'assistant':'user',content:m.text}));
-      const reply=await askClaude(history);
-      setMessages(prev=>[...prev,{role:'assistant',text:reply}]);
-    } catch { setMessages(prev=>[...prev,{role:'assistant',text:"Erreur de connexion. Vérifiez votre réseau."}]); }
-    setLoading(false);
-  };
-
-  return (
-    <div style={{display:'flex',flexDirection:'column',height:'calc(100vh - 220px)',minHeight:400}}>
-      <div style={{flex:1,overflowY:'auto',display:'flex',flexDirection:'column',gap:10,marginBottom:10}}>
-        {messages.map((m,i)=>(
-          <div key={i} style={{display:'flex',justifyContent:m.role==='user'?'flex-end':'flex-start'}}>
-            <div style={{maxWidth:'88%',padding:'10px 14px',borderRadius:12,background:m.role==='user'?ECG_SURF2:ECG_SURF,border:`1px solid ${m.role==='user'?ECG_GREEN+'44':ECG_BORD}`,color:ECG_TEXT,fontSize:13,lineHeight:1.7,whiteSpace:'pre-wrap'}}>
-              {m.role==='assistant' && <div style={{color:ECG_GREEN,fontFamily:'monospace',fontSize:10,letterSpacing:2,marginBottom:5}}>◈ ASSISTANT ECG</div>}
-              {m.text}
-            </div>
-          </div>
-        ))}
-        {loading && <div style={{display:'flex'}}><div style={{background:ECG_SURF,border:`1px solid ${ECG_BORD}`,borderRadius:12,padding:'10px 14px'}}><span style={{color:ECG_GREEN,fontFamily:'monospace',fontSize:12}}>◈ Analyse en cours...</span></div></div>}
-        <div ref={bottomRef}/>
-      </div>
-      {messages.length===1 && (
-        <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:10}}>
-          {suggestions.map((s,i)=>(<button key={i} onClick={()=>send(s)} style={{background:ECG_SURF2,border:`1px solid ${ECG_BORD}`,color:ECG_MUTED,borderRadius:20,padding:'5px 11px',fontSize:11,fontFamily:'monospace',cursor:'pointer'}}>{s}</button>))}
-        </div>
-      )}
-      <div style={{display:'flex',gap:8}}>
-        <input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&send(input)}
-          placeholder="Posez votre question sur l'ECG..."
-          style={{flex:1,background:ECG_SURF,border:`1px solid ${ECG_BORD}`,borderRadius:8,padding:'10px 13px',color:ECG_TEXT,fontSize:13,outline:'none'}}/>
-        <button onClick={()=>send(input)} disabled={!input.trim()||loading}
-          style={{background:input.trim()&&!loading?`${ECG_GREEN}18`:ECG_SURF,border:`1px solid ${ECG_GREEN}`,color:ECG_GREEN,borderRadius:8,padding:'10px 16px',fontSize:13,opacity:!input.trim()||loading?0.4:1,cursor:'pointer'}}>↑</button>
-      </div>
-    </div>
-  );
-}
-
 // ── Module principal ─────────────────────────────────────────────────────────
 const TABS = [
   {id:'bases',   label:'Bases',   icon:'📖'},
   {id:'rythmes', label:'Rythmes', icon:'💓'},
   {id:'quiz',    label:'Quiz',    icon:'🎯'},
-  {id:'ia',      label:'IA ECG',  icon:'🤖'},
 ];
 
 export default function ECG({ onBack }) {
@@ -616,7 +548,6 @@ export default function ECG({ onBack }) {
         {tab==='bases'   && <BasesTab/>}
         {tab==='rythmes' && <RythmesTab/>}
         {tab==='quiz'    && <QuizTab/>}
-        {tab==='ia'      && <AssistantTab/>}
       </div>
     </div>
   );
