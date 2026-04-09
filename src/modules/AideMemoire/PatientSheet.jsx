@@ -9,6 +9,7 @@ import { secureGet, secureSet } from './crypto.js';
 import { todayStr, timeStr, genId, isFlagActive, FieldInput } from './utils.jsx';
 import { getSpecialty, SPECIALTIES, getAllFieldsAlpha } from './templates.js';
 import CareSchedule from './CareSchedule.jsx';
+import { computeSlots } from './ServiceView.jsx';
 
 // ─── Sous-composants ──────────────────────────────────────────────────────────
 
@@ -123,13 +124,26 @@ function EditPatientModal({ patient, onSave, onClose }) {
 
 function MoveBedModal({ patient, service, occupiedBeds, onMove, onClose }) {
   const [selected, setSelected] = useState(null);
-  const beds = Array.from({ length: service.bedCount }, (_, i) => i + 1);
 
-  function bLabel(num) { return service.bedConfig?.[num]?.label || String(num); }
-  function bIcon(num) {
-    const ic = service.bedConfig?.[num]?.icon;
-    return ic === 'door' ? '🚪' : ic === 'window' ? '🪟' : '🛏';
+  // Utilise computeSlots() — source unique de vérité, identique à ServiceView
+  const slots = computeSlots(service);
+
+  function slotIcon(icon) {
+    if (icon === 'door')   return '🚪';
+    if (icon === 'window') return '🪟';
+    return '🛏';
   }
+
+  // Retrouver le label du slot actuel du patient
+  const currentSlot = slots.find(sl => sl.slotIndex === patient.bedNumber);
+  const currentLabel = currentSlot
+    ? (currentSlot.icon ? `${currentSlot.roomLabel} ${slotIcon(currentSlot.icon)}` : currentSlot.roomLabel)
+    : String(patient.bedNumber);
+
+  const selectedSlot = slots.find(sl => sl.slotIndex === selected);
+  const selectedLabel = selectedSlot
+    ? (selectedSlot.icon ? `${selectedSlot.roomLabel} ${slotIcon(selectedSlot.icon)}` : selectedSlot.roomLabel)
+    : '—';
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', display: 'flex', alignItems: 'flex-end', zIndex: 200 }}>
@@ -139,16 +153,18 @@ function MoveBedModal({ patient, service, occupiedBeds, onMove, onClose }) {
           <button onClick={onClose} style={{ background: 'none', border: 'none', color: T.muted, fontSize: 26, cursor: 'pointer', lineHeight: 1 }}>×</button>
         </div>
         <div style={{ color: T.muted, fontSize: 13, marginBottom: 14 }}>
-          {patient.initials} — actuellement Ch.{bLabel(patient.bedNumber)}
+          {patient.initials} — actuellement Ch.{currentLabel}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 20 }}>
-          {beds.map(num => {
-            const isCurrent  = num === patient.bedNumber;
-            const isOccupied = occupiedBeds.includes(num) && !isCurrent;
-            const isSel      = selected === num;
+          {slots.map(slot => {
+            const isCurrent  = slot.slotIndex === patient.bedNumber;
+            const isOccupied = occupiedBeds.includes(slot.slotIndex) && !isCurrent;
+            const isSel      = selected === slot.slotIndex;
+            const icon       = slotIcon(slot.icon);
+            const label      = slot.icon ? `${slot.roomLabel} ${icon}` : slot.roomLabel;
             return (
-              <button key={num} disabled={isOccupied || isCurrent}
-                onClick={() => setSelected(isSel ? null : num)}
+              <button key={slot.slotIndex} disabled={isOccupied || isCurrent}
+                onClick={() => setSelected(isSel ? null : slot.slotIndex)}
                 style={{
                   background:   isSel ? '#6366f133' : T.bg,
                   border:       `1px solid ${isSel ? '#6366f1' : isCurrent ? '#6366f144' : T.border}`,
@@ -158,8 +174,9 @@ function MoveBedModal({ patient, service, occupiedBeds, onMove, onClose }) {
                   opacity: isOccupied ? 0.4 : 1, textAlign: 'center',
                   WebkitTapHighlightColor: 'transparent',
                 }}>
-                <div style={{ fontSize: 16 }}>{bIcon(num)}</div>
-                <div style={{ fontWeight: 700 }}>{bLabel(num)}</div>
+                <div style={{ fontSize: 16 }}>{icon}</div>
+                <div style={{ fontWeight: 700 }}>{slot.roomLabel}</div>
+                {slot.icon && <div style={{ color: T.muted, fontSize: 9 }}>{label}</div>}
                 <div style={{ color: T.muted, fontSize: 10 }}>{isCurrent ? 'Actuel' : isOccupied ? 'Occupé' : 'Libre'}</div>
               </button>
             );
@@ -167,7 +184,7 @@ function MoveBedModal({ patient, service, occupiedBeds, onMove, onClose }) {
         </div>
         <button onClick={() => { if (selected) { onMove(selected); onClose(); } }} disabled={!selected}
           style={{ ...s.btn('#6366f1'), width: '100%', padding: '13px', fontSize: 15, fontWeight: 700, opacity: selected ? 1 : 0.4 }}>
-          Déplacer vers Ch.{selected ? bLabel(selected) : '—'}
+          Déplacer vers Ch.{selectedLabel}
         </button>
       </div>
     </div>
