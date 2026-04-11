@@ -1,6 +1,7 @@
 /**
- * DayOverview.jsx — Aide-Mémoire v4 fix
- * Vue journalière : événements, RDV, soins planifiés de tous les patients
+ * DayOverview.jsx — Aide-Mémoire v4 fix2
+ * Source unique de vérité chambre : computeSlots() importé de ServiceView
+ * (suppression de resolveSlot/slotDisplay locaux)
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -8,8 +9,8 @@ import { T } from '../../theme.js';
 import { secureGet } from './crypto.js';
 import { todayStr } from './utils.jsx';
 import { getSpecialty } from './templates.js';
+import { computeSlots } from './ServiceView.jsx';
 
-// Couleurs et emojis des soins (dupliqués ici pour éviter la dépendance circulaire)
 const CARE_META = {
   constantes_vitales: { emoji: '📊', color: '#06b6d4' },
   antalgie:           { emoji: '💊', color: '#f43f5e' },
@@ -25,32 +26,36 @@ const CARE_META = {
 };
 function careMeta(type) { return CARE_META[type] || CARE_META.autre; }
 
-// Helpers lits compatibles bedSlots et ancienne structure bedConfig
-function resolveSlot(service, bedNumber) {
-  // Nouvelle structure : bedSlots
-  if (service.bedSlots) {
-    const slot = service.bedSlots.find(s => s.slotIndex === bedNumber);
-    if (slot) return { label: slot.label || String(bedNumber), icon: slot.icon };
-  }
-  // Ancienne structure : bedConfig
-  if (service.bedConfig?.[bedNumber]) {
-    const cfg = service.bedConfig[bedNumber];
-    return { label: cfg.label || String(bedNumber), icon: cfg.icon || null };
-  }
-  return { label: String(bedNumber), icon: null };
+// ── Helpers slot (via computeSlots — source unique) ────────────────────────────
+
+function buildSlotMap(service) {
+  const slots = computeSlots(service);
+  const map   = {};
+  for (const sl of slots) map[sl.slotIndex] = sl;
+  return map;
 }
 
-function slotDisplay(service, bedNumber) {
-  const { label, icon } = resolveSlot(service, bedNumber);
-  const ico = icon === 'door' ? '🚪' : icon === 'window' ? '🪟' : '🛏';
-  return `${ico} ${label}`;
+function slotLabel(slotMap, bedNumber) {
+  const sl  = slotMap[bedNumber];
+  if (!sl) return `🛏 ${bedNumber}`;
+  const ico = sl.icon === 'door' ? '🚪' : sl.icon === 'window' ? '🪟' : '🛏';
+  return `${ico} ${sl.roomLabel}${sl.icon ? ' ' + ico : ''}`.trim();
+  // roomLabel + icône si double
+}
+
+function slotDisplay(slotMap, bedNumber) {
+  const sl = slotMap[bedNumber];
+  if (!sl) return `🛏 ${bedNumber}`;
+  const ico = sl.icon === 'door' ? '🚪' : sl.icon === 'window' ? '🪟' : '🛏';
+  return sl.icon ? `${sl.roomLabel} ${ico}` : `${ico} ${sl.roomLabel}`;
 }
 
 // ─── Composant ────────────────────────────────────────────────────────────────
 
 export default function DayOverview({ service, cryptoKey, onBack }) {
-  const sp    = getSpecialty(service.specialty);
-  const today = todayStr();
+  const sp      = getSpecialty(service.specialty);
+  const today   = todayStr();
+  const slotMap = buildSlotMap(service);
 
   const [patients,  setPatients]  = useState([]);
   const [dailyData, setDailyData] = useState({});
@@ -68,11 +73,7 @@ export default function DayOverview({ service, cryptoKey, onBack }) {
       present.sort((a, b) => a.bedNumber - b.bedNumber);
       setPatients(present);
       setDailyData(daily || {});
-    } catch (e) {
-      console.error('[DayOverview] loadData error:', e);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   }, [service.id, cryptoKey, today]);
 
   useEffect(() => { loadData(); }, [loadData]);
@@ -83,189 +84,185 @@ export default function DayOverview({ service, cryptoKey, onBack }) {
     </div>
   );
 
-  // ── Agrégation ──────────────────────────────────────────────────────────────
+  // ── Données agrégées ────────────────────────────────────────────────────────
 
-  const allEvents = [];
-  const allRdv    = [];
-  const allCare   = [];
+  const careEntries = [];
+  const allEvents   = [];
+  const allRdv      = [];
 
   for (const p of patients) {
-    const daily = dailyData[p.id] || {};
-
-    // Événements
-    for (const ev of (daily.events || [])) {
+    const d = dailyData[p.id] || {};
+    for (const e of (d.careEntries || [])) {
+      careEntries.push({ ...e, patient: p });
+    }
+    for (const ev of (d.events || [])) {
       allEvents.push({ ...ev, patient: p });
     }
-
-    // RDV : champs info persistants avec valeur
-    const infoFields = [...(service.fields || []), ...(p.customFields || [])].filter(f => f.category === 'info');
-    for (const f of infoFields) {
-      const v = f.persistent ? (p.fieldValues || {})[f.id] : (daily.fieldValues || {})[f.id];
-      if (v && v !== false && v !== '') allRdv.push({ field: f, value: v, patient: p });
-    }
-
-    // Soins
-    for (const e of (daily.careEntries || [])) {
-      allCare.push({ ...e, patient: p });
+    for (const rdv of (d.rdv || [])) {
+      allRdv.push({ ...rdv, patient: p });
     }
   }
 
-  allEvents.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
-  allCare.sort((a, b) => (a.plannedTime || '').localeCompare(b.plannedTime || ''));
+  const carePending = careEntries.filter(e => !e.done);
+  const careDone    = careEntries.filter(e =>  e.done);
+  carePending.sort((a, b) => (a.plannedTime || '').localeCompare(b.plannedTime || ''));
+  allRdv.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 
   const tabs = [
-    { id: 'soins',  label: 'Soins',       emoji: '💊', count: allCare.length   },
-    { id: 'events', label: 'Événements',  emoji: '📝', count: allEvents.length  },
-    { id: 'rdv',    label: 'RDV / Infos', emoji: '📅', count: allRdv.length     },
+    { id: 'soins',  label: `Soins (${carePending.length})` },
+    { id: 'events', label: `Événements (${allEvents.length})` },
+    { id: 'rdv',    label: `RDV (${allRdv.length})` },
+    { id: 'recap',  label: 'Récap' },
   ];
 
   return (
     <div style={{ background: T.bg, minHeight: '100vh', boxSizing: 'border-box' }}>
 
       {/* Header */}
-      <div style={{ padding: '14px 16px 0', background: T.bg, position: 'sticky', top: 0, zIndex: 10, borderBottom: `1px solid ${T.border}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+      <div style={{ padding: '12px 16px 0', position: 'sticky', top: 0, background: T.bg, zIndex: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
           <button onClick={onBack} style={{ background: 'none', border: 'none', color: T.muted, fontSize: 22, cursor: 'pointer', padding: 4 }}>←</button>
-          <div style={{ flex: 1 }}>
-            <div style={{ color: T.text, fontSize: 17, fontWeight: 700 }}>Vue du jour</div>
-            <div style={{ color: T.muted, fontSize: 12 }}>
-              {service.name} · {patients.length} patients · {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })}
-            </div>
+          <div>
+            <div style={{ color: T.text, fontSize: 16, fontWeight: 700 }}>{service.name}</div>
+            <div style={{ color: T.muted, fontSize: 12 }}>📅 {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })}</div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 0 }}>
+        {/* Onglets */}
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 10, borderBottom: `1px solid ${T.border}` }}>
           {tabs.map(t => (
             <button key={t.id} onClick={() => setTab(t.id)}
-              style={{
-                flex: 1, background: tab === t.id ? '#6366f122' : 'transparent',
-                border: 'none', borderBottom: `2px solid ${tab === t.id ? '#6366f1' : 'transparent'}`,
-                color: tab === t.id ? '#6366f1' : T.muted,
-                fontSize: 12, fontWeight: tab === t.id ? 700 : 400,
-                padding: '8px 4px', cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}>
-              {t.emoji} {t.label}
-              {t.count > 0 && (
-                <span style={{ marginLeft: 4, background: tab === t.id ? '#6366f1' : T.muted, color: '#fff', borderRadius: 10, fontSize: 10, padding: '1px 5px' }}>
-                  {t.count}
-                </span>
-              )}
+              style={{ background: tab === t.id ? sp.color + '22' : T.surface, border: `1px solid ${tab === t.id ? sp.color : T.border}`, borderRadius: 16, color: tab === t.id ? sp.color : T.muted, fontSize: 12, padding: '5px 10px', cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              {t.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* Contenu */}
-      <div style={{ padding: '14px 16px 60px' }}>
+      <div style={{ padding: '12px 16px 60px' }}>
 
         {/* ── Soins ── */}
         {tab === 'soins' && (
-          allCare.length === 0 ? <Empty text="Aucun soin programmé aujourd'hui" /> : (
-            <div>
-              {allCare.map((entry, i) => {
-                const { emoji, color } = careMeta(entry.type);
-                return (
-                  <div key={entry.id || i} style={{
-                    display: 'flex', gap: 10, alignItems: 'flex-start',
-                    background: T.surface, border: `1px solid ${entry.done ? T.border : color + '44'}`,
-                    borderLeft: `3px solid ${entry.done ? '#22c55e' : color}`,
-                    borderRadius: 9, padding: '10px 12px', marginBottom: 8,
-                    opacity: entry.done ? 0.7 : 1,
-                  }}>
-                    <div style={{ textAlign: 'center', minWidth: 42, flexShrink: 0 }}>
-                      <div style={{ color: color, fontSize: 12, fontWeight: 700 }}>{entry.plannedTime}</div>
-                      <div style={{ fontSize: 18 }}>{emoji}</div>
-                    </div>
+          <>
+            {carePending.length === 0 && (
+              <div style={{ color: T.muted, textAlign: 'center', padding: '40px 20px', fontSize: 13 }}>
+                ✅ Aucun soin en attente
+              </div>
+            )}
+            {carePending.map((e, i) => {
+              const m = careMeta(e.type);
+              return (
+                <div key={i} style={{ background: T.surface, border: `1px solid ${m.color}44`, borderLeft: `3px solid ${m.color}`, borderRadius: 10, padding: '10px 12px', marginBottom: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 18 }}>{m.emoji}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                        <span style={{ color: T.text, fontSize: 13, fontWeight: 600, textDecoration: entry.done ? 'line-through' : 'none' }}>
-                          {entry.label}
-                        </span>
-                        {entry.done && <span style={{ color: '#22c55e', fontSize: 11 }}>✓ {entry.doneTime}</span>}
-                      </div>
-                      {entry.doneValue && (
-                        <span style={{ background: '#22c55e22', color: '#22c55e', fontSize: 11, borderRadius: 4, padding: '1px 7px', fontWeight: 700 }}>
-                          {entry.doneValue}
-                        </span>
-                      )}
-                      <div style={{ marginTop: 4, display: 'flex', gap: 5, alignItems: 'center' }}>
-                        <span style={{ color: sp.color, fontSize: 11, fontWeight: 700 }}>{slotDisplay(service, entry.patient.bedNumber)}</span>
-                        <span style={{ color: T.muted, fontSize: 11 }}>· {entry.patient.initials} {entry.patient.gender} {entry.patient.age}a</span>
-                      </div>
+                      <div style={{ color: T.text, fontSize: 13, fontWeight: 600 }}>{e.label}</div>
+                      <div style={{ color: sp.color, fontSize: 11, fontWeight: 700, marginTop: 1 }}>{slotDisplay(slotMap, e.patient.bedNumber)} — {e.patient.initials}</div>
                     </div>
+                    {e.plannedTime && (
+                      <span style={{ color: T.muted, fontFamily: 'monospace', fontSize: 12, flexShrink: 0 }}>{e.plannedTime}</span>
+                    )}
                   </div>
-                );
-              })}
-            </div>
-          )
+                  {e.note && <div style={{ color: T.muted, fontSize: 11, marginTop: 6, marginLeft: 26 }}>{e.note}</div>}
+                </div>
+              );
+            })}
+            {careDone.length > 0 && (
+              <div style={{ color: T.muted, fontSize: 12, marginTop: 20, marginBottom: 8 }}>
+                ✅ Soins effectués ({careDone.length})
+              </div>
+            )}
+            {careDone.map((e, i) => {
+              const m = careMeta(e.type);
+              return (
+                <div key={i} style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, padding: '8px 12px', marginBottom: 6, opacity: 0.5 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 16 }}>{m.emoji}</span>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ color: T.muted, fontSize: 12, textDecoration: 'line-through' }}>{e.label}</span>
+                      <span style={{ color: T.muted, fontSize: 11, marginLeft: 6 }}>{slotDisplay(slotMap, e.patient.bedNumber)}</span>
+                    </div>
+                    {e.doneTime && <span style={{ color: T.muted, fontSize: 11 }}>{e.doneTime}</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </>
         )}
 
         {/* ── Événements ── */}
         {tab === 'events' && (
-          allEvents.length === 0 ? <Empty text="Aucun événement enregistré aujourd'hui" /> : (
-            <div>
-              {allEvents.map((ev, i) => (
-                <div key={ev.id || i} style={{
-                  display: 'flex', gap: 10, alignItems: 'flex-start',
-                  background: T.surface, border: `1px solid ${T.border}`,
-                  borderLeft: `3px solid ${sp.color}`,
-                  borderRadius: 9, padding: '10px 12px', marginBottom: 8,
-                }}>
-                  <span style={{ color: '#22c55e', fontSize: 12, fontWeight: 700, minWidth: 38, marginTop: 1 }}>{ev.time}</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ color: T.text, fontSize: 13 }}>{ev.text}</div>
-                    <div style={{ marginTop: 4, display: 'flex', gap: 5 }}>
-                      <span style={{ color: sp.color, fontSize: 11, fontWeight: 700 }}>{slotDisplay(service, ev.patient.bedNumber)}</span>
-                      <span style={{ color: T.muted, fontSize: 11 }}>· {ev.patient.initials}</span>
-                    </div>
+          <>
+            {allEvents.length === 0 && (
+              <div style={{ color: T.muted, textAlign: 'center', padding: '40px 20px', fontSize: 13 }}>Aucun événement aujourd'hui</div>
+            )}
+            {[...allEvents].reverse().map((ev, i) => (
+              <div key={i} style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 10, padding: '10px 12px', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                  <span style={{ color: T.muted, fontFamily: 'monospace', fontSize: 11, marginTop: 2, flexShrink: 0 }}>{ev.time}</span>
+                  <div style={{ flex: 1 }}>
+                    <span style={{ color: sp.color, fontSize: 11, fontWeight: 700 }}>{slotDisplay(slotMap, ev.patient.bedNumber)} — {ev.patient.initials}</span>
+                    <div style={{ color: T.text, fontSize: 13, marginTop: 2 }}>{ev.text}</div>
                   </div>
                 </div>
-              ))}
-            </div>
-          )
+              </div>
+            ))}
+          </>
         )}
 
         {/* ── RDV ── */}
         {tab === 'rdv' && (
-          allRdv.length === 0 ? <Empty text="Aucun RDV ou information planifiée" /> : (
-            <div>
-              {patients.map(p => {
-                const rdvs = allRdv.filter(r => r.patient.id === p.id);
-                if (!rdvs.length) return null;
-                return (
-                  <div key={p.id} style={{ marginBottom: 16 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                      <span style={{ color: sp.color, fontSize: 13, fontWeight: 700 }}>{slotDisplay(service, p.bedNumber)}</span>
-                      <span style={{ color: T.text, fontSize: 14, fontWeight: 700 }}>{p.initials}</span>
-                      <span style={{ color: T.muted, fontSize: 12 }}>{p.gender} {p.age}a</span>
-                    </div>
-                    {rdvs.map(({ field, value }) => (
-                      <div key={field.id} style={{
-                        display: 'flex', gap: 10,
-                        background: T.surface, border: `1px solid ${T.border}`,
-                        borderRadius: 8, padding: '9px 12px', marginBottom: 6, marginLeft: 4,
-                      }}>
-                        <span style={{ color: T.muted, fontSize: 12, minWidth: 100, flexShrink: 0 }}>{field.label}</span>
-                        <span style={{ color: T.text, fontSize: 13, fontWeight: 600 }}>{String(value)}</span>
-                      </div>
-                    ))}
+          <>
+            {allRdv.length === 0 && (
+              <div style={{ color: T.muted, textAlign: 'center', padding: '40px 20px', fontSize: 13 }}>Aucun rendez-vous planifié</div>
+            )}
+            {allRdv.map((rdv, i) => (
+              <div key={i} style={{ background: T.surface, border: `1px solid ${T.border}`, borderLeft: `3px solid ${sp.color}`, borderRadius: 10, padding: '10px 12px', marginBottom: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ color: sp.color, fontSize: 16 }}>📅</span>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ color: T.text, fontSize: 13, fontWeight: 600 }}>{rdv.label || rdv.text}</div>
+                    <div style={{ color: sp.color, fontSize: 11, marginTop: 1 }}>{slotDisplay(slotMap, rdv.patient.bedNumber)} — {rdv.patient.initials}</div>
                   </div>
-                );
-              })}
-            </div>
-          )
+                  {rdv.time && <span style={{ color: T.muted, fontFamily: 'monospace', fontSize: 12 }}>{rdv.time}</span>}
+                </div>
+              </div>
+            ))}
+          </>
+        )}
+
+        {/* ── Récapitulatif ── */}
+        {tab === 'recap' && (
+          <>
+            {patients.map(p => {
+              const d        = dailyData[p.id] || {};
+              const pending  = (d.careEntries || []).filter(e => !e.done).length;
+              const done     = (d.careEntries || []).filter(e =>  e.done).length;
+              const evCount  = (d.events || []).length;
+              return (
+                <div key={p.id} style={{ background: T.surface, border: `1px solid ${T.border}`, borderLeft: `3px solid ${sp.color}`, borderRadius: 10, padding: '10px 12px', marginBottom: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <span style={{ color: sp.color, fontSize: 13, fontWeight: 700, minWidth: 72 }}>{slotDisplay(slotMap, p.bedNumber)}</span>
+                    <span style={{ color: T.text, fontSize: 14, fontWeight: 700 }}>{p.initials}</span>
+                    <span style={{ color: T.muted, fontSize: 12 }}>{p.gender} {p.age}a</span>
+                  </div>
+                  {p.admissionReason && (
+                    <div style={{ color: T.muted, fontSize: 12, marginBottom: 4, marginLeft: 80 }}>{p.admissionReason}</div>
+                  )}
+                  <div style={{ display: 'flex', gap: 8, marginLeft: 80, flexWrap: 'wrap' }}>
+                    {done > 0     && <span style={{ background: '#22c55e22', color: '#22c55e', fontSize: 10, borderRadius: 8, padding: '2px 8px' }}>✅ {done} soin{done > 1 ? 's' : ''}</span>}
+                    {pending > 0  && <span style={{ background: '#f9731622', color: '#f97316', fontSize: 10, borderRadius: 8, padding: '2px 8px' }}>⏳ {pending} à faire</span>}
+                    {evCount > 0  && <span style={{ background: '#6366f122', color: '#6366f1', fontSize: 10, borderRadius: 8, padding: '2px 8px' }}>📝 {evCount} évén.</span>}
+                  </div>
+                </div>
+              );
+            })}
+            {patients.length === 0 && (
+              <div style={{ color: T.muted, textAlign: 'center', padding: '40px 20px', fontSize: 13 }}>Aucun patient présent</div>
+            )}
+          </>
         )}
       </div>
-    </div>
-  );
-}
-
-function Empty({ text }) {
-  return (
-    <div style={{ textAlign: 'center', marginTop: 60 }}>
-      <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
-      <div style={{ color: T.muted, fontSize: 14 }}>{text}</div>
     </div>
   );
 }
