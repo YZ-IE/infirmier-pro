@@ -1,7 +1,9 @@
 /**
- * SecureTransfer.jsx — Aide-Mémoire v2
- * Fix : utilise generateTransferCode() + encryptForTransfer(code, payload)
- * pour garantir la symétrie avec decryptFromTransfer(blob, code)
+ * SecureTransfer.jsx — Aide-Mémoire v3
+ * Import complet :
+ *   · Patients + soins du jour
+ *   · Configuration chambres (bedRooms / bedConfig)
+ *   · Création automatique du service s'il est absent
  */
 
 import { useState } from 'react';
@@ -47,14 +49,17 @@ export default function SecureTransfer({ service, cryptoKey, onBack }) {
       const payload = {
         exportedAt: Date.now(),
         service: {
-          id: service.id, name: service.name, specialty: service.specialty,
-          fields: service.fields, bedRooms: service.bedRooms,
-          bedConfig: service.bedConfig, bedCount: service.bedCount,
+          id:        service.id,
+          name:      service.name,
+          specialty: service.specialty,
+          fields:    service.fields,
+          bedRooms:  service.bedRooms  || [],
+          bedConfig: service.bedConfig || {},
+          bedCount:  service.bedCount  || 20,
         },
         patients: patients || [],
         daily:    daily    || {},
       };
-      // Génère le code PUIS chiffre avec ce même code (symétrique avec decrypt)
       const generatedCode = generateTransferCode();
       const b64 = await encryptForTransfer(generatedCode, payload);
       setBlob(b64);
@@ -81,7 +86,7 @@ export default function SecureTransfer({ service, cryptoKey, onBack }) {
     try {
       const payload = await decryptFromTransfer(pastedBlob.trim(), inputCode);
       setPreview(payload);
-    } catch (e) {
+    } catch {
       setError('Déchiffrement impossible. Vérifiez le code ou le blob.');
     } finally { setBusy(false); }
   }
@@ -90,10 +95,53 @@ export default function SecureTransfer({ service, cryptoKey, onBack }) {
     if (!preview || !confirmed) return;
     setBusy(true); setError('');
     try {
-      await secureSet(`patients_${service.id}`, preview.patients, cryptoKey);
-      await secureSet(`daily_${service.id}_${today}`, preview.daily, cryptoKey);
-      setSuccess(`✅ Import réussi — ${preview.patients.length} patient(s) importé(s)`);
-      setPreview(null); setPastedBlob(''); setInputCode(''); setConfirmed(false);
+      const src = preview.service;
+
+      // ── 1. Créer ou mettre à jour le service dans la liste ────────────────
+      const services = await secureGet('services', cryptoKey) || [];
+      const exists   = services.find(sv => sv.id === src.id);
+
+      if (!exists) {
+        // Service absent → le créer avec toute la config exportée
+        const newService = {
+          id:        src.id,
+          name:      src.name,
+          specialty: src.specialty,
+          fields:    src.fields    || [],
+          bedRooms:  src.bedRooms  || [],
+          bedConfig: src.bedConfig || {},
+          bedCount:  src.bedCount  || 20,
+          createdAt: Date.now(),
+          importedAt: Date.now(),
+        };
+        await secureSet('services', [...services, newService], cryptoKey);
+      } else {
+        // Service existant → mettre à jour la config chambres
+        const updated = services.map(sv =>
+          sv.id === src.id
+            ? {
+                ...sv,
+                bedRooms:  src.bedRooms  || sv.bedRooms  || [],
+                bedConfig: src.bedConfig || sv.bedConfig || {},
+                bedCount:  src.bedCount  || sv.bedCount,
+                fields:    src.fields    || sv.fields,
+              }
+            : sv
+        );
+        await secureSet('services', updated, cryptoKey);
+      }
+
+      // ── 2. Importer patients et soins du jour (ID source) ─────────────────
+      await secureSet(`patients_${src.id}`, preview.patients, cryptoKey);
+      await secureSet(`daily_${src.id}_${today}`, preview.daily, cryptoKey);
+
+      const nb = preview.patients?.length || 0;
+      const msg = exists
+        ? `✅ Import réussi — ${nb} patient(s) · config chambres mise à jour`
+        : `✅ Service "${src.name}" créé — ${nb} patient(s) importé(s)`;
+      setSuccess(msg);
+      setPastedBlob(''); setInputCode(''); setPreview(null); setConfirmed(false);
+
     } catch (e) {
       setError('Erreur lors de l\'import : ' + e.message);
     } finally { setBusy(false); }
@@ -129,7 +177,7 @@ export default function SecureTransfer({ service, cryptoKey, onBack }) {
         <div style={{ background: '#0c1a2e', border: '1px solid #1e3a5f', borderRadius: 10, padding: '10px 14px', marginBottom: 16 }}>
           <div style={{ color: '#60a5fa', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>🔒 Protocole de sécurité</div>
           <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.5 }}>
-            Les données sont chiffrées AES-256 avant tout transfert. Un code à 8 chiffres séparé est requis pour déchiffrer. Aucune donnée lisible ne transite.
+            AES-256-GCM · PBKDF2 100k · Code vocal séparé · Zéro réseau
           </div>
         </div>
 
@@ -140,10 +188,19 @@ export default function SecureTransfer({ service, cryptoKey, onBack }) {
         {tab === 'export' && (
           <>
             <div style={{ ...card, marginBottom: 16 }}>
+              <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Ce qui est exporté</div>
+              {[
+                '👥 Patients présents (initiales, âge, motif, ATCD)',
+                '💊 Soins du jour (planifiés et effectués)',
+                '📊 Constantes et événements du jour',
+                '🚪 Configuration des chambres',
+              ].map((item, i) => (
+                <div key={i} style={{ color: T.muted, fontSize: 12, marginBottom: 4 }}>✓ {item}</div>
+              ))}
+            </div>
+
+            <div style={{ ...card, marginBottom: 16 }}>
               <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Étape 1 — Générer le paquet chiffré</div>
-              <div style={{ color: T.text, fontSize: 13, marginBottom: 14, lineHeight: 1.5 }}>
-                Génère un fichier chiffré de vos données patients du jour + un code secret à communiquer verbalement à votre collègue.
-              </div>
               <button onClick={handleExport} disabled={busy}
                 style={{ ...s.btn(ACCENT), width: '100%', padding: '13px', fontSize: 15, fontWeight: 700, opacity: busy ? 0.5 : 1 }}>
                 {busy ? 'Chiffrement…' : '🔐 Générer le paquet chiffré'}
@@ -152,7 +209,6 @@ export default function SecureTransfer({ service, cryptoKey, onBack }) {
 
             {blob && (
               <>
-                {/* Code secret */}
                 <div style={{ background: '#052e16', border: '1px solid #22c55e44', borderRadius: 12, padding: '16px', marginBottom: 16, textAlign: 'center' }}>
                   <div style={{ color: '#22c55e', fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
                     🔑 Code secret — à dire verbalement à votre collègue
@@ -161,11 +217,10 @@ export default function SecureTransfer({ service, cryptoKey, onBack }) {
                     {code}
                   </div>
                   <div style={{ color: '#4ade80', fontSize: 11, marginTop: 8 }}>
-                    ⚠️ Ne pas transmettre ce code via le même canal que le paquet chiffré
+                    ⚠️ Ne pas envoyer ce code par le même canal que le paquet
                   </div>
                 </div>
 
-                {/* Blob */}
                 <div style={{ ...card, marginBottom: 16 }}>
                   <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Étape 2 — Copier le paquet chiffré</div>
                   <div style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, padding: '10px 12px', marginBottom: 12, fontFamily: 'monospace', fontSize: 10, color: T.muted, wordBreak: 'break-all', maxHeight: 80, overflowY: 'auto' }}>
@@ -181,9 +236,9 @@ export default function SecureTransfer({ service, cryptoKey, onBack }) {
                 </div>
 
                 <div style={{ background: '#1a0a12', border: '1px solid #f43f5e33', borderRadius: 10, padding: '10px 14px' }}>
-                  <div style={{ color: '#f43f5e', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>⚠️ Rappel secret professionnel</div>
+                  <div style={{ color: '#f43f5e', fontSize: 12, fontWeight: 700, marginBottom: 4 }}>⚠️ Secret professionnel</div>
                   <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.5 }}>
-                    Le paquet chiffré peut transiter via presse-papier, NFC ou Bluetooth. Communiquez le code uniquement de vive voix.
+                    Communiquez le code uniquement de vive voix. Le paquet chiffré peut transiter par tout canal.
                   </div>
                 </div>
               </>
@@ -194,6 +249,19 @@ export default function SecureTransfer({ service, cryptoKey, onBack }) {
         {/* ════ IMPORT ════ */}
         {tab === 'import' && !preview && (
           <>
+            {/* Info ce qui sera importé */}
+            <div style={{ ...card, marginBottom: 16 }}>
+              <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Ce qui sera importé</div>
+              {[
+                '👥 Patients + données cliniques',
+                '💊 Soins du jour',
+                '🚪 Configuration des chambres',
+                '🏥 Service créé automatiquement s\'il est absent',
+              ].map((item, i) => (
+                <div key={i} style={{ color: T.muted, fontSize: 12, marginBottom: 4 }}>✓ {item}</div>
+              ))}
+            </div>
+
             <div style={{ ...card, marginBottom: 16 }}>
               <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Étape 1 — Coller le paquet chiffré</div>
               <textarea value={pastedBlob} onChange={e => setPastedBlob(e.target.value)}
@@ -220,34 +288,54 @@ export default function SecureTransfer({ service, cryptoKey, onBack }) {
           </>
         )}
 
-        {/* Prévisualisation */}
+        {/* ── Prévisualisation ── */}
         {tab === 'import' && preview && (
           <>
             <div style={{ background: '#052e16', border: '1px solid #22c55e44', borderRadius: 12, padding: '14px', marginBottom: 16 }}>
-              <div style={{ color: '#22c55e', fontSize: 13, fontWeight: 700, marginBottom: 8 }}>✅ Déchiffrement réussi — Aperçu</div>
-              <div style={{ color: T.muted, fontSize: 12, marginBottom: 4 }}>Service : <span style={{ color: T.text }}>{preview.service?.name}</span></div>
-              <div style={{ color: T.muted, fontSize: 12, marginBottom: 4 }}>Patients : <span style={{ color: T.text }}>{preview.patients?.length || 0}</span></div>
-              <div style={{ color: T.muted, fontSize: 12, marginBottom: 12 }}>Exporté le : <span style={{ color: T.text }}>{preview.exportedAt ? new Date(preview.exportedAt).toLocaleString('fr-FR') : '—'}</span></div>
+              <div style={{ color: '#22c55e', fontSize: 13, fontWeight: 700, marginBottom: 10 }}>✅ Déchiffrement réussi — Aperçu</div>
+
+              <div style={{ display: 'flex', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
+                <span style={{ background: '#166534', color: '#4ade80', fontSize: 11, borderRadius: 8, padding: '3px 10px' }}>
+                  🏥 {preview.service?.name}
+                </span>
+                <span style={{ background: '#166534', color: '#4ade80', fontSize: 11, borderRadius: 8, padding: '3px 10px' }}>
+                  👥 {preview.patients?.length || 0} patient(s)
+                </span>
+                <span style={{ background: '#166534', color: '#4ade80', fontSize: 11, borderRadius: 8, padding: '3px 10px' }}>
+                  🚪 {(preview.service?.bedRooms || []).length || preview.service?.bedCount || 0} chambre(s)
+                </span>
+              </div>
+
+              <div style={{ color: T.muted, fontSize: 11, marginBottom: 10 }}>
+                Exporté le {preview.exportedAt ? new Date(preview.exportedAt).toLocaleString('fr-FR') : '—'}
+              </div>
+
               {(preview.patients || []).slice(0, 5).map(p => (
-                <div key={p.id} style={{ background: T.surface, borderRadius: 8, padding: '6px 10px', marginBottom: 6, fontSize: 12 }}>
-                  <span style={{ color: T.muted }}>Lit {p.bedNumber} </span>
+                <div key={p.id} style={{ background: T.surface, borderRadius: 8, padding: '6px 10px', marginBottom: 6, fontSize: 12, display: 'flex', gap: 6 }}>
+                  <span style={{ color: T.muted }}>Lit {p.bedNumber}</span>
                   <span style={{ color: T.text, fontWeight: 700 }}>{p.initials}</span>
-                  <span style={{ color: T.muted }}> {p.gender} {p.age}a</span>
-                  {p.admissionReason && <span style={{ color: T.muted }}> — {p.admissionReason.slice(0, 30)}</span>}
+                  <span style={{ color: T.muted }}>{p.gender} {p.age}a</span>
+                  {p.admissionReason && <span style={{ color: T.muted }}>— {p.admissionReason.slice(0, 25)}</span>}
                 </div>
               ))}
-              {(preview.patients || []).length > 5 && <div style={{ color: T.muted, fontSize: 11, textAlign: 'center' }}>… et {preview.patients.length - 5} autre(s)</div>}
+              {(preview.patients || []).length > 5 && (
+                <div style={{ color: T.muted, fontSize: 11, textAlign: 'center' }}>… et {preview.patients.length - 5} autre(s)</div>
+              )}
             </div>
 
             <div style={{ background: '#1a0a12', border: '1px solid #f43f5e33', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-              <div style={{ color: '#f43f5e', fontSize: 12, fontWeight: 700, marginBottom: 6 }}>⚠️ Écrasement des données locales</div>
+              <div style={{ color: '#f43f5e', fontSize: 12, fontWeight: 700, marginBottom: 6 }}>⚠️ Action irréversible</div>
               <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.5, marginBottom: 10 }}>
-                Cet import va <strong style={{ color: T.text }}>remplacer</strong> les patients et soins du jour de <em>{service.name}</em>. Action irréversible.
+                Les patients et soins du jour du service <strong style={{ color: T.text }}>{preview.service?.name}</strong> seront remplacés sur cet appareil.
+                La configuration des chambres sera mise à jour.
+                {!true && ' Le service sera créé s\'il est absent.'}
               </div>
               <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
                 <input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)}
                   style={{ width: 18, height: 18, marginTop: 1, flexShrink: 0 }} />
-                <span style={{ color: T.text, fontSize: 12 }}>Je confirme vouloir remplacer les données locales</span>
+                <span style={{ color: T.text, fontSize: 12 }}>
+                  Je confirme vouloir importer et remplacer les données locales
+                </span>
               </label>
             </div>
 
