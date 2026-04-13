@@ -1,13 +1,13 @@
 /**
- * ServiceView.jsx — Aide-Mémoire v4 fix3
+ * ServiceView.jsx — Aide-Mémoire v5
  * Correctifs CNIL :
- *   · doExport() : avertissement obligatoire avant navigator.share()
- *   · Bouton transfert sécurisé (🔄) → SecureTransfer
+ *   · Export texte supprimé (remplacé par transfert sécurisé uniquement)
+ *   · Bouton journal d'accès 📋 ajouté
  */
 
 import { useState, useEffect, useCallback } from 'react';
 import { T, s } from '../../theme.js';
-import { secureGet, secureSet, verifyPin } from './crypto.js';
+import { secureGet, secureSet } from './crypto.js';
 import { getSpecialty } from './templates.js';
 import { todayStr, genId, isFlagActive, activeFlagsEmoji } from './utils.jsx';
 
@@ -50,103 +50,7 @@ function slotLabel(slot) {
   return slot.icon ? `${slot.roomLabel} ${slotIcon(slot.icon)}` : slot.roomLabel;
 }
 
-// ── Modal PIN export ──────────────────────────────────────────────────────────
 
-const NUMPAD = [1, 2, 3, 4, 5, 6, 7, 8, 9, null, 0, '⌫'];
-
-function PinExportModal({ onConfirm, onClose }) {
-  const [pin,  setPin]  = useState('');
-  const [error,setError]= useState('');
-  const [busy, setBusy] = useState(false);
-
-  async function handleDigit(d) {
-    if (busy || pin.length >= 4) return;
-    const next = pin + String(d);
-    setPin(next);
-    if (next.length === 4) {
-      setBusy(true);
-      const key = await verifyPin(next);
-      if (key) { onConfirm(); onClose(); }
-      else { setError('PIN incorrect'); setPin(''); }
-      setBusy(false);
-    }
-  }
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.82)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200 }}>
-      <div style={{ background: T.surface, borderRadius: 16, padding: '28px 24px', width: 280, boxSizing: 'border-box', textAlign: 'center' }}>
-        <div style={{ fontSize: 36, marginBottom: 12 }}>🔐</div>
-        <div style={{ color: T.text, fontSize: 16, fontWeight: 700, marginBottom: 4 }}>Confirmer l'export</div>
-        <div style={{ color: T.muted, fontSize: 13, marginBottom: 20 }}>Saisir votre PIN</div>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginBottom: 14 }}>
-          {Array.from({ length: 4 }, (_, i) => (
-            <div key={i} style={{ width: 14, height: 14, borderRadius: '50%', background: i < pin.length ? '#6366f1' : 'transparent', border: `2px solid ${i < pin.length ? '#6366f1' : T.border}` }} />
-          ))}
-        </div>
-        <div style={{ height: 22, marginBottom: 10 }}>
-          {error && <span style={{ color: '#f43f5e', fontSize: 13 }}>{error}</span>}
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
-          {NUMPAD.map((k, i) => {
-            if (k === null) return <div key={i} />;
-            return (
-              <button key={i} onClick={() => k === '⌫' ? setPin(p => p.slice(0, -1)) : handleDigit(k)} disabled={busy}
-                style={{ background: T.bg, border: `1px solid ${T.border}`, borderRadius: 10, color: k === '⌫' ? T.muted : T.text, fontSize: k === '⌫' ? 18 : 20, height: 52, cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>
-                {k}
-              </button>
-            );
-          })}
-        </div>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: T.muted, fontSize: 14, cursor: 'pointer' }}>Annuler</button>
-      </div>
-    </div>
-  );
-}
-
-// ── Modal avertissement export CNIL ──────────────────────────────────────────
-
-function ExportWarningModal({ serviceName, onConfirm, onClose }) {
-  const [accepted, setAccepted] = useState(false);
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.82)', display: 'flex', alignItems: 'flex-end', zIndex: 200 }}>
-      <div style={{ background: T.surface, borderRadius: '16px 16px 0 0', padding: '24px 20px 44px', width: '100%', boxSizing: 'border-box' }}>
-        <div style={{ fontSize: 32, textAlign: 'center', marginBottom: 12 }}>⚠️</div>
-        <div style={{ color: T.text, fontSize: 16, fontWeight: 700, marginBottom: 8, textAlign: 'center' }}>Export — Données de santé</div>
-
-        <div style={{ background: '#1a0a12', border: '1px solid #f43f5e33', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
-          <div style={{ color: '#f43f5e', fontSize: 12, fontWeight: 700, marginBottom: 6 }}>Secret professionnel (art. R.4311-5 CSP)</div>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}>
-            Cet export contient des données de santé pseudonymisées du service <strong style={{ color: T.text }}>{serviceName}</strong>.{'\n\n'}
-            Ces données sont soumises au secret professionnel. Elles ne doivent être transmises que via des canaux sécurisés (MSSanté, messagerie professionnelle) et uniquement à des professionnels habilités.
-          </div>
-        </div>
-
-        <div style={{ background: '#0c1a2e', border: '1px solid #1e3a5f', borderRadius: 10, padding: '10px 14px', marginBottom: 16 }}>
-          <div style={{ color: '#60a5fa', fontSize: 12, marginBottom: 4 }}>💡 Alternative recommandée</div>
-          <div style={{ color: T.muted, fontSize: 12 }}>
-            Utilisez le <strong style={{ color: T.text }}>Transfert sécurisé 🔄</strong> pour envoyer les données à un collègue via un canal chiffré de bout en bout, sans exposer les données en clair.
-          </div>
-        </div>
-
-        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 20, cursor: 'pointer' }}>
-          <input type="checkbox" checked={accepted} onChange={e => setAccepted(e.target.checked)}
-            style={{ width: 18, height: 18, marginTop: 1, flexShrink: 0 }} />
-          <span style={{ color: T.text, fontSize: 12 }}>
-            Je confirme que ce partage est nécessaire et sera limité aux professionnels habilités
-          </span>
-        </label>
-
-        <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={onClose} style={{ flex: 1, background: T.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: T.muted, fontSize: 14, padding: '12px', cursor: 'pointer' }}>Annuler</button>
-          <button onClick={onConfirm} disabled={!accepted}
-            style={{ ...s.btn(accepted ? '#f97316' : T.muted), flex: 2, padding: '12px', fontSize: 14, fontWeight: 700, opacity: accepted ? 1 : 0.4 }}>
-            Exporter quand même
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ── Modal config chambres ─────────────────────────────────────────────────────
 
@@ -247,20 +151,18 @@ function BedsConfigModal({ service, onSave, onClose }) {
 
 // ── Composant principal ───────────────────────────────────────────────────────
 
-export default function ServiceView({ service, cryptoKey, accentColor, onSelectPatient, onQuickEntry, onDayOverview, onBack, onServiceUpdate, onTransfer, refreshKey }) {
+export default function ServiceView({ service, cryptoKey, accentColor, onSelectPatient, onQuickEntry, onDayOverview, onBack, onServiceUpdate, onTransfer, onLog, refreshKey }) {
   const C  = accentColor;
   const sp = getSpecialty(service.specialty);
 
-  const [patients,       setPatients]       = useState([]);
-  const [dailyData,      setDailyData]      = useState({});
-  const [loading,        setLoading]        = useState(true);
-  const [addBed,         setAddBed]         = useState(null);
-  const [addForm,        setAddForm]        = useState({ initials: '', age: '', gender: 'M', reason: '', atcd: '' });
-  const [saving,         setSaving]         = useState(false);
-  const [confirmReset,   setConfirmReset]   = useState(false);
-  const [showBedsCfg,    setShowBedsCfg]    = useState(false);
-  const [showPinExport,  setShowPinExport]  = useState(false);
-  const [showExpWarn,    setShowExpWarn]    = useState(false);
+  const [patients,     setPatients]     = useState([]);
+  const [dailyData,    setDailyData]    = useState({});
+  const [loading,      setLoading]      = useState(true);
+  const [addBed,       setAddBed]       = useState(null);
+  const [addForm,      setAddForm]      = useState({ initials: '', age: '', gender: 'M', reason: '', atcd: '' });
+  const [saving,       setSaving]       = useState(false);
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [showBedsCfg,  setShowBedsCfg] = useState(false);
 
   const today = todayStr();
 
@@ -301,36 +203,6 @@ export default function ServiceView({ service, cryptoKey, accentColor, onSelectP
     } finally { setSaving(false); }
   }
 
-  // Export texte — avec avertissement obligatoire (CNIL)
-  function doExport() {
-    const present = patients.filter(p => p.present);
-    const slots   = computeSlots(service);
-    const lines   = [
-      `AIDE-MÉMOIRE — ${service.name}`,
-      new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' }),
-      '─'.repeat(42),
-    ];
-    for (const slot of slots) {
-      const p   = present.find(pt => pt.bedNumber === slot.slotIndex);
-      const ico = slotIcon(slot.icon);
-      const lbl = slotLabel(slot);
-      if (!p) { lines.push(`${ico} ${lbl} : Libre`); continue; }
-      const daily = dailyData[p.id] || {};
-      const flags = [...(service.fields || []), ...(p.customFields || [])]
-        .filter(f => f.category === 'flag')
-        .filter(f => isFlagActive(f, f.persistent ? p.fieldValues?.[f.id] : daily.fieldValues?.[f.id]))
-        .map(f => f.label).join(' · ');
-      lines.push(`${ico} ${lbl} : ${p.initials} ${p.gender} ${p.age}a${flags ? '  [' + flags + ']' : ''}`);
-      if (p.admissionReason) lines.push(`      ${p.admissionReason}`);
-      const pending = (daily.careEntries || []).filter(e => !e.done);
-      if (pending.length) lines.push(`      ⏳ ${pending.map(e => `${e.label} ${e.plannedTime}`).join(' | ')}`);
-      lines.push('');
-    }
-    const text = lines.join('\n');
-    if (navigator.share) navigator.share({ title: `Aide-Mémoire ${service.name}`, text }).catch(() => {});
-    else if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => alert('📋 Copié'));
-  }
-
   if (loading) return (
     <div style={{ background: T.bg, minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <span style={{ color: T.muted, fontSize: 14 }}>Chargement…</span>
@@ -352,11 +224,11 @@ export default function ServiceView({ service, cryptoKey, accentColor, onSelectP
             <div style={{ color: T.muted, fontSize: 12 }}>{sp.label} · {presentPts.length}/{slots.length} lits</div>
           </div>
           {[
-            { icon: '⚙️', fn: () => setShowBedsCfg(true),   col: T.muted, bg: T.surface },
-            { icon: '📋', fn: onDayOverview,                 col: T.muted, bg: T.surface },
-            { icon: '⚡', fn: onQuickEntry,                  col: C,       bg: C + '22'  },
-            { icon: '🔄', fn: onTransfer,                    col: '#6366f1', bg: '#6366f122', title: 'Transfert sécurisé' },
-            { icon: '⬆',  fn: () => setShowPinExport(true), col: T.muted, bg: T.surface, title: 'Export texte' },
+            { icon: '⚙️', fn: () => setShowBedsCfg(true), col: T.muted,   bg: T.surface,   title: 'Config chambres'    },
+            { icon: '📋', fn: onDayOverview,               col: T.muted,   bg: T.surface,   title: 'Vue du jour'        },
+            { icon: '⚡', fn: onQuickEntry,                col: C,         bg: C + '22',    title: 'Saisie rapide'      },
+            { icon: '🔄', fn: onTransfer,                  col: '#6366f1', bg: '#6366f122', title: 'Transfert sécurisé' },
+            { icon: '🗒️', fn: onLog,                       col: T.muted,   bg: T.surface,   title: 'Journal accès'      },
           ].map((b, i) => (
             <button key={i} onClick={b.fn} title={b.title}
               style={{ background: b.bg, border: `1px solid ${T.border}`, borderRadius: 8, color: b.col, fontSize: 16, padding: '6px 9px', cursor: 'pointer', flexShrink: 0 }}>
@@ -475,9 +347,7 @@ export default function ServiceView({ service, cryptoKey, accentColor, onSelectP
         );
       })()}
 
-      {showBedsCfg  && <BedsConfigModal    service={service}  onSave={handleBedsSave}  onClose={() => setShowBedsCfg(false)} />}
-      {showPinExport && <PinExportModal     onConfirm={() => setShowExpWarn(true)}       onClose={() => setShowPinExport(false)} />}
-      {showExpWarn  && <ExportWarningModal  serviceName={service.name} onConfirm={() => { doExport(); setShowExpWarn(false); }} onClose={() => setShowExpWarn(false)} />}
+      {showBedsCfg && <BedsConfigModal service={service} onSave={handleBedsSave} onClose={() => setShowBedsCfg(false)} />}
     </div>
   );
 }
