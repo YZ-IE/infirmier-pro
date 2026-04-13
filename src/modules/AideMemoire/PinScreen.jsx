@@ -41,8 +41,9 @@ export default function PinScreen({ pinExists, accentColor, onUnlocked, onBack }
   const C = accentColor || ACCENT;
 
   const [step,      setStep]      = useState(pinExists ? 'verify' : 'create');
-  const [password,  setPassword]  = useState('');
-  const [confirm,   setConfirm]   = useState('');
+  const [password,      setPassword]      = useState('');
+  const [confirm,       setConfirm]       = useState('');
+  const [firstPassword, setFirstPassword] = useState('');
   const [showPwd,   setShowPwd]   = useState(false);
   const [error,     setError]     = useState('');
   const [loading,   setLoading]   = useState(false);
@@ -73,11 +74,12 @@ export default function PinScreen({ pinExists, accentColor, onUnlocked, onBack }
     try {
       if (step === 'create') {
         if (!strength.ok) { setError('Mot de passe trop faible.'); return; }
+        setFirstPassword(password);  // sauvegarder avant de vider
         setStep('confirm');
         setPassword('');
       } else if (step === 'confirm') {
-        if (password !== confirm) { setError('Les mots de passe ne correspondent pas.'); setPassword(''); setConfirm(''); setStep('create'); return; }
-        const key = await createPin(password);
+        if (password !== firstPassword) { setError('Les mots de passe ne correspondent pas.'); setPassword(''); setConfirm(''); setFirstPassword(''); setStep('create'); return; }
+        const key = await createPin(firstPassword);
         onUnlocked(key);
       } else {
         // verify
@@ -179,7 +181,7 @@ export default function PinScreen({ pinExists, accentColor, onUnlocked, onBack }
   // ── Confirmation ──────────────────────────────────────────────────────────────
   if (step === 'confirm') return (
     <div style={{ background: T.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, position: 'relative', boxSizing: 'border-box' }}>
-      <button onClick={() => { setStep('create'); setPassword(''); setConfirm(''); setError(''); }}
+      <button onClick={() => { setStep('create'); setPassword(''); setConfirm(''); setFirstPassword(''); setError(''); }}
         style={{ position: 'absolute', top: 20, left: 16, background: 'none', border: 'none', color: T.muted, fontSize: 24, cursor: 'pointer' }}>←</button>
       <div style={{ fontSize: 48, marginBottom: 16 }}>🔐</div>
       <div style={{ color: T.text, fontSize: 20, fontWeight: 700, marginBottom: 6, textAlign: 'center' }}>Confirmer le mot de passe</div>
@@ -190,23 +192,23 @@ export default function PinScreen({ pinExists, accentColor, onUnlocked, onBack }
           <input
             ref={inputRef}
             type={showPwd ? 'text' : 'password'}
-            value={confirm}
-            onChange={e => { setConfirm(e.target.value); setError(''); }}
+            value={password}
+            onChange={e => { setPassword(e.target.value); setError(''); }}
             onKeyDown={e => e.key === 'Enter' && handleSubmit()}
             placeholder="Répétez le mot de passe"
-            style={{ ...s.input, width: '100%', boxSizing: 'border-box', paddingRight: 44, fontSize: 15, borderColor: confirm && confirm !== password ? '#f43f5e' : undefined }}
+            style={{ ...s.input, width: '100%', boxSizing: 'border-box', paddingRight: 44, fontSize: 15, borderColor: password && password !== firstPassword ? '#f43f5e' : undefined }}
           />
           <button onClick={() => setShowPwd(v => !v)}
             style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: T.muted, cursor: 'pointer', fontSize: 18 }}>
             {showPwd ? '🙈' : '👁'}
           </button>
         </div>
-        {confirm && confirm !== password && (
+        {password && password !== firstPassword && (
           <div style={{ color: '#f43f5e', fontSize: 12, marginBottom: 12 }}>Les mots de passe ne correspondent pas</div>
         )}
         {error && <div style={{ color: '#f43f5e', fontSize: 13, marginBottom: 14, background: '#f43f5e22', borderRadius: 8, padding: '8px 12px' }}>{error}</div>}
-        <button onClick={handleSubmit} disabled={loading || !confirm || confirm !== password}
-          style={{ ...s.btn(C), width: '100%', padding: '13px', fontSize: 15, fontWeight: 700, opacity: (confirm && confirm === password && !loading) ? 1 : 0.4 }}>
+        <button onClick={handleSubmit} disabled={loading || !password || password !== firstPassword}
+          style={{ ...s.btn(C), width: '100%', padding: '13px', fontSize: 15, fontWeight: 700, opacity: (password && password === firstPassword && !loading) ? 1 : 0.4 }}>
           {loading ? 'Création…' : 'Créer le mot de passe'}
         </button>
       </div>
