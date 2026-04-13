@@ -1,42 +1,60 @@
 /**
- * PinScreen.jsx — Aide-Mémoire
- * Correctifs CNIL/ANSSI :
- *   · Verrouillage après 5 tentatives → 15 min
- *   · Compte à rebours visible
- *   · Avertissement tentatives restantes
+ * PinScreen.jsx — Aide-Mémoire v5
+ * Remplacement du PIN 4 chiffres par mot de passe robuste (≥8 car.)
+ * Conformité ANSSI/CNIL : complexité, verrouillage, indicateur de force
  */
 
-import { useState, useEffect } from 'react';
-import { T } from '../../theme.js';
-import { createPin, verifyPin, isLockedOut, getLockoutRemaining, recordFailure, clearLockout, getFailures } from './crypto.js';
+import { useState, useEffect, useRef } from 'react';
+import { T, s } from '../../theme.js';
+import {
+  createPin, verifyPin,
+  isLockedOut, getLockoutRemaining,
+  recordFailure, clearLockout, getFailures,
+} from './crypto.js';
 
-const PIN_LENGTH = 4;
-const NUMPAD     = [1, 2, 3, 4, 5, 6, 7, 8, 9, null, 0, '⌫'];
+const ACCENT = '#6366f1';
 
-const TITLES = {
-  create:  'Créer votre PIN',
-  confirm: 'Confirmer le PIN',
-  verify:  'Déverrouiller',
-};
-const SUBTITLES = {
-  create:  'Protège vos données patients',
-  confirm: 'Saisissez à nouveau votre PIN',
-  verify:  'Saisir votre PIN',
-};
+// ─── Évaluation force du mot de passe ────────────────────────────────────────
+
+function assessPassword(pwd) {
+  const checks = [
+    { ok: pwd.length >= 8,            label: '≥ 8 caractères' },
+    { ok: /[A-Z]/.test(pwd),          label: 'Majuscule'       },
+    { ok: /[a-z]/.test(pwd),          label: 'Minuscule'       },
+    { ok: /\d/.test(pwd),             label: 'Chiffre'         },
+    { ok: /[^A-Za-z0-9]/.test(pwd),   label: 'Caractère spécial' },
+  ];
+  const score  = checks.filter(c => c.ok).length;
+  const labels = ['Très faible', 'Faible', 'Moyen', 'Fort', 'Très fort', 'Excellent'];
+  const colors = ['#ef4444', '#ef4444', '#f97316', '#f97316', '#22c55e', '#22c55e'];
+  return {
+    checks, score,
+    label: labels[score],
+    color: colors[score],
+    ok:    score >= 3 && pwd.length >= 8,
+  };
+}
+
+// ─── Composant ────────────────────────────────────────────────────────────────
 
 export default function PinScreen({ pinExists, accentColor, onUnlocked, onBack }) {
-  const C = accentColor;
+  const C = accentColor || ACCENT;
 
   const [step,      setStep]      = useState(pinExists ? 'verify' : 'create');
-  const [pin,       setPin]       = useState('');
-  const [firstPin,  setFirstPin]  = useState('');
+  const [password,  setPassword]  = useState('');
+  const [confirm,   setConfirm]   = useState('');
+  const [showPwd,   setShowPwd]   = useState(false);
   const [error,     setError]     = useState('');
   const [loading,   setLoading]   = useState(false);
   const [locked,    setLocked]    = useState(() => isLockedOut());
   const [countdown, setCountdown] = useState(() => getLockoutRemaining());
   const [failures,  setFailures]  = useState(() => getFailures());
 
-  // ── Compte à rebours de verrouillage ────────────────────────────────────────
+  const inputRef = useRef(null);
+
+  useEffect(() => { if (inputRef.current) inputRef.current.focus(); }, [step]);
+
+  // Compte à rebours verrouillage
   useEffect(() => {
     if (!locked) return;
     const id = setInterval(() => {
@@ -47,120 +65,199 @@ export default function PinScreen({ pinExists, accentColor, onUnlocked, onBack }
     return () => clearInterval(id);
   }, [locked]);
 
-  function handleDigit(digit) {
-    if (loading || locked || pin.length >= PIN_LENGTH) return;
-    setError('');
-    const next = pin + String(digit);
-    setPin(next);
-    if (next.length === PIN_LENGTH) setTimeout(() => handleComplete(next), 120);
-  }
+  const strength = assessPassword(password);
 
-  function handleDelete() {
+  async function handleSubmit() {
     if (loading || locked) return;
-    setError('');
-    setPin(p => p.slice(0, -1));
-  }
-
-  async function handleComplete(fullPin) {
-    setLoading(true);
+    setLoading(true); setError('');
     try {
       if (step === 'create') {
-        setFirstPin(fullPin); setPin(''); setStep('confirm');
+        if (!strength.ok) { setError('Mot de passe trop faible.'); return; }
+        setStep('confirm');
+        setPassword('');
       } else if (step === 'confirm') {
-        if (fullPin !== firstPin) {
-          setError('PINs différents — recommencez'); setPin(''); setFirstPin(''); setStep('create');
-        } else {
-          const key = await createPin(fullPin); onUnlocked(key);
-        }
+        if (password !== confirm) { setError('Les mots de passe ne correspondent pas.'); setPassword(''); setConfirm(''); setStep('create'); return; }
+        const key = await createPin(password);
+        onUnlocked(key);
       } else {
         // verify
-        const key = await verifyPin(fullPin);
+        const key = await verifyPin(password);
         if (key) {
           onUnlocked(key);
         } else {
           const { locked: nowLocked, failures: f } = recordFailure();
           setFailures(f);
-          if (nowLocked) {
-            setLocked(true); setCountdown(getLockoutRemaining());
-            setError('');
-          } else {
-            const remaining = 5 - f;
-            setError(remaining > 0 ? `PIN incorrect — ${remaining} tentative${remaining > 1 ? 's' : ''} restante${remaining > 1 ? 's' : ''}` : 'PIN incorrect');
-          }
-          setPin('');
+          if (nowLocked) { setLocked(true); setCountdown(getLockoutRemaining()); }
+          else { const r = 5 - f; setError(`Mot de passe incorrect — ${r} tentative${r > 1 ? 's' : ''} restante${r > 1 ? 's' : ''}`); }
+          setPassword('');
         }
       }
-    } catch (e) {
-      setError('Erreur inattendue'); setPin('');
-      console.error('[AideMemoire] PIN error:', e);
-    } finally { setLoading(false); }
+    } catch (e) { setError('Erreur inattendue'); setPassword(''); console.error(e); }
+    finally { setLoading(false); }
   }
 
-  // ── Écran verrouillé ────────────────────────────────────────────────────────
+  // ── Verrouillé ──────────────────────────────────────────────────────────────
   if (locked) {
     const min = Math.floor(countdown / 60);
     const sec = String(countdown % 60).padStart(2, '0');
     return (
       <div style={{ background: T.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, boxSizing: 'border-box' }}>
-        <button onClick={onBack} style={{ position: 'absolute', top: 20, left: 16, background: 'none', border: 'none', color: T.muted, fontSize: 24, cursor: 'pointer', padding: 8 }}>←</button>
+        <button onClick={onBack} style={{ position: 'absolute', top: 20, left: 16, background: 'none', border: 'none', color: T.muted, fontSize: 24, cursor: 'pointer' }}>←</button>
         <div style={{ fontSize: 52, marginBottom: 16 }}>🔒</div>
         <div style={{ color: '#f43f5e', fontSize: 18, fontWeight: 700, marginBottom: 8, textAlign: 'center' }}>Application verrouillée</div>
-        <div style={{ color: T.muted, fontSize: 13, marginBottom: 24, textAlign: 'center' }}>
-          {failures} tentatives incorrectes — limite atteinte
-        </div>
+        <div style={{ color: T.muted, fontSize: 13, marginBottom: 24, textAlign: 'center' }}>{failures} tentatives incorrectes</div>
         <div style={{ background: '#f43f5e22', border: '1px solid #f43f5e44', borderRadius: 12, padding: '18px 32px', textAlign: 'center', marginBottom: 16 }}>
           <div style={{ color: T.muted, fontSize: 12, marginBottom: 6 }}>Déverrouillage dans</div>
           <div style={{ color: '#f43f5e', fontSize: 36, fontWeight: 700, fontFamily: 'monospace' }}>{min}:{sec}</div>
         </div>
         <div style={{ color: T.muted, fontSize: 11, textAlign: 'center', background: T.surface, borderRadius: 8, padding: '10px 16px', maxWidth: 280 }}>
-          ⚠️ Cet événement est enregistré conformément aux exigences de traçabilité.
+          ⚠️ Événement enregistré dans le journal d'accès.
         </div>
       </div>
     );
   }
 
-  // ── Écran PIN normal ────────────────────────────────────────────────────────
+  // ── Création ──────────────────────────────────────────────────────────────────
+  if (step === 'create') return (
+    <div style={{ background: T.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, position: 'relative', boxSizing: 'border-box' }}>
+      <button onClick={onBack} style={{ position: 'absolute', top: 20, left: 16, background: 'none', border: 'none', color: T.muted, fontSize: 24, cursor: 'pointer' }}>←</button>
+      <div style={{ fontSize: 48, marginBottom: 16 }}>🔐</div>
+      <div style={{ color: T.text, fontSize: 20, fontWeight: 700, marginBottom: 6, textAlign: 'center' }}>Créer votre mot de passe</div>
+      <div style={{ color: T.muted, fontSize: 13, marginBottom: 28, textAlign: 'center' }}>Protège vos données patients · Minimum 8 caractères</div>
+
+      <div style={{ width: '100%', maxWidth: 340 }}>
+        {/* Champ */}
+        <div style={{ position: 'relative', marginBottom: 12 }}>
+          <input
+            ref={inputRef}
+            type={showPwd ? 'text' : 'password'}
+            value={password}
+            onChange={e => { setPassword(e.target.value); setError(''); }}
+            onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+            placeholder="Votre mot de passe"
+            style={{ ...s.input, width: '100%', boxSizing: 'border-box', paddingRight: 44, fontSize: 15 }}
+          />
+          <button onClick={() => setShowPwd(v => !v)}
+            style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: T.muted, cursor: 'pointer', fontSize: 18 }}>
+            {showPwd ? '🙈' : '👁'}
+          </button>
+        </div>
+
+        {/* Indicateur de force */}
+        {password.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', gap: 4, marginBottom: 6 }}>
+              {[1,2,3,4,5].map(i => (
+                <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= strength.score ? strength.color : T.border, transition: 'background 0.3s' }} />
+              ))}
+            </div>
+            <div style={{ color: strength.color, fontSize: 12, fontWeight: 600, marginBottom: 8 }}>{strength.label}</div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {strength.checks.map(c => (
+                <span key={c.label} style={{ color: c.ok ? '#22c55e' : T.muted, fontSize: 11, background: c.ok ? '#22c55e11' : T.surface, borderRadius: 6, padding: '2px 8px' }}>
+                  {c.ok ? '✓' : '○'} {c.label}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {error && <div style={{ color: '#f43f5e', fontSize: 13, marginBottom: 14, background: '#f43f5e22', borderRadius: 8, padding: '8px 12px' }}>{error}</div>}
+
+        <button onClick={handleSubmit} disabled={loading || !strength.ok}
+          style={{ ...s.btn(C), width: '100%', padding: '13px', fontSize: 15, fontWeight: 700, opacity: (strength.ok && !loading) ? 1 : 0.4 }}>
+          {loading ? 'Chiffrement…' : 'Continuer →'}
+        </button>
+      </div>
+
+      <div style={{ color: T.muted, fontSize: 11, marginTop: 32, textAlign: 'center', lineHeight: 1.6 }}>
+        🔒 AES-256 · PBKDF2 100k · Stockage local uniquement
+      </div>
+    </div>
+  );
+
+  // ── Confirmation ──────────────────────────────────────────────────────────────
+  if (step === 'confirm') return (
+    <div style={{ background: T.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, position: 'relative', boxSizing: 'border-box' }}>
+      <button onClick={() => { setStep('create'); setPassword(''); setConfirm(''); setError(''); }}
+        style={{ position: 'absolute', top: 20, left: 16, background: 'none', border: 'none', color: T.muted, fontSize: 24, cursor: 'pointer' }}>←</button>
+      <div style={{ fontSize: 48, marginBottom: 16 }}>🔐</div>
+      <div style={{ color: T.text, fontSize: 20, fontWeight: 700, marginBottom: 6, textAlign: 'center' }}>Confirmer le mot de passe</div>
+      <div style={{ color: T.muted, fontSize: 13, marginBottom: 28, textAlign: 'center' }}>Saisissez à nouveau votre mot de passe</div>
+
+      <div style={{ width: '100%', maxWidth: 340 }}>
+        <div style={{ position: 'relative', marginBottom: 16 }}>
+          <input
+            ref={inputRef}
+            type={showPwd ? 'text' : 'password'}
+            value={confirm}
+            onChange={e => { setConfirm(e.target.value); setError(''); }}
+            onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+            placeholder="Répétez le mot de passe"
+            style={{ ...s.input, width: '100%', boxSizing: 'border-box', paddingRight: 44, fontSize: 15, borderColor: confirm && confirm !== password ? '#f43f5e' : undefined }}
+          />
+          <button onClick={() => setShowPwd(v => !v)}
+            style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: T.muted, cursor: 'pointer', fontSize: 18 }}>
+            {showPwd ? '🙈' : '👁'}
+          </button>
+        </div>
+        {confirm && confirm !== password && (
+          <div style={{ color: '#f43f5e', fontSize: 12, marginBottom: 12 }}>Les mots de passe ne correspondent pas</div>
+        )}
+        {error && <div style={{ color: '#f43f5e', fontSize: 13, marginBottom: 14, background: '#f43f5e22', borderRadius: 8, padding: '8px 12px' }}>{error}</div>}
+        <button onClick={handleSubmit} disabled={loading || !confirm || confirm !== password}
+          style={{ ...s.btn(C), width: '100%', padding: '13px', fontSize: 15, fontWeight: 700, opacity: (confirm && confirm === password && !loading) ? 1 : 0.4 }}>
+          {loading ? 'Création…' : 'Créer le mot de passe'}
+        </button>
+      </div>
+    </div>
+  );
+
+  // ── Vérification ──────────────────────────────────────────────────────────────
   return (
     <div style={{ background: T.bg, minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24, position: 'relative', boxSizing: 'border-box' }}>
-      <button onClick={onBack} style={{ position: 'absolute', top: 20, left: 16, background: 'none', border: 'none', color: T.muted, fontSize: 24, cursor: 'pointer', padding: 8 }}>←</button>
+      <button onClick={onBack} style={{ position: 'absolute', top: 20, left: 16, background: 'none', border: 'none', color: T.muted, fontSize: 24, cursor: 'pointer' }}>←</button>
+      <div style={{ fontSize: 48, marginBottom: 16 }}>🔐</div>
+      <div style={{ color: T.text, fontSize: 20, fontWeight: 700, marginBottom: 6, textAlign: 'center' }}>Déverrouiller</div>
+      <div style={{ color: T.muted, fontSize: 13, marginBottom: failures > 0 ? 12 : 28, textAlign: 'center' }}>Saisir votre mot de passe</div>
 
-      <div style={{ fontSize: 48, marginBottom: 16, userSelect: 'none' }}>🔐</div>
-      <div style={{ color: T.text, fontSize: 20, fontWeight: 700, marginBottom: 6, textAlign: 'center' }}>{TITLES[step]}</div>
-      <div style={{ color: T.muted, fontSize: 14, marginBottom: step === 'verify' && failures > 0 ? 8 : 32, textAlign: 'center' }}>{SUBTITLES[step]}</div>
-
-      {/* Avertissement tentatives restantes */}
-      {step === 'verify' && failures > 0 && (
-        <div style={{ background: '#f9731622', border: '1px solid #f9731644', borderRadius: 8, padding: '6px 16px', marginBottom: 18, fontSize: 12, color: '#f97316', textAlign: 'center' }}>
+      {failures > 0 && (
+        <div style={{ background: '#f9731622', border: '1px solid #f9731644', borderRadius: 8, padding: '7px 16px', marginBottom: 18, fontSize: 12, color: '#f97316', textAlign: 'center', maxWidth: 320 }}>
           ⚠️ {failures} tentative{failures > 1 ? 's' : ''} incorrecte{failures > 1 ? 's' : ''} — verrouillage après {5 - failures} de plus
         </div>
       )}
 
-      {/* Points PIN */}
-      <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
-        {Array.from({ length: PIN_LENGTH }, (_, i) => (
-          <div key={i} style={{ width: 16, height: 16, borderRadius: '50%', background: i < pin.length ? C : 'transparent', border: `2px solid ${i < pin.length ? C : T.border}`, transition: 'all 0.12s' }} />
-        ))}
+      <div style={{ width: '100%', maxWidth: 340 }}>
+        <div style={{ position: 'relative', marginBottom: 16 }}>
+          <input
+            ref={inputRef}
+            type={showPwd ? 'text' : 'password'}
+            value={password}
+            onChange={e => { setPassword(e.target.value); setError(''); }}
+            onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+            placeholder="Votre mot de passe"
+            autoFocus
+            style={{ ...s.input, width: '100%', boxSizing: 'border-box', paddingRight: 44, fontSize: 15 }}
+          />
+          <button onClick={() => setShowPwd(v => !v)}
+            style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: T.muted, cursor: 'pointer', fontSize: 18 }}>
+            {showPwd ? '🙈' : '👁'}
+          </button>
+        </div>
+
+        {error && <div style={{ color: '#f43f5e', fontSize: 13, marginBottom: 14, background: '#f43f5e22', borderRadius: 8, padding: '8px 12px' }}>{error}</div>}
+
+        <button onClick={handleSubmit} disabled={loading || !password}
+          style={{ ...s.btn(C), width: '100%', padding: '13px', fontSize: 15, fontWeight: 700, opacity: (password && !loading) ? 1 : 0.4 }}>
+          {loading ? 'Vérification…' : 'Déverrouiller'}
+        </button>
+
+        <div style={{ color: T.muted, fontSize: 11, marginTop: 20, textAlign: 'center' }}>
+          Mot de passe oublié ? Désinstallez et réinstallez l'application.
+        </div>
       </div>
 
-      <div style={{ height: 28, display: 'flex', alignItems: 'center', marginBottom: 12 }}>
-        {error && <span style={{ color: '#f43f5e', fontSize: 13 }}>{error}</span>}
-      </div>
-
-      {/* Pavé numérique */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, width: 240 }}>
-        {NUMPAD.map((key, i) => {
-          if (key === null) return <div key={i} />;
-          const isDel = key === '⌫';
-          return (
-            <button key={i} disabled={loading} onClick={() => isDel ? handleDelete() : handleDigit(key)}
-              style={{ background: T.surface, border: `1px solid ${T.border}`, borderRadius: 12, color: isDel ? T.muted : T.text, fontSize: isDel ? 20 : 22, fontWeight: 500, height: 64, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: loading ? 0.5 : 1, WebkitTapHighlightColor: 'transparent' }}>
-              {key}
-            </button>
-          );
-        })}
-      </div>
-
-      <div style={{ color: T.muted, fontSize: 11, marginTop: 40, textAlign: 'center', lineHeight: 1.6 }}>
+      <div style={{ color: T.muted, fontSize: 11, marginTop: 32, textAlign: 'center' }}>
         🔒 Données chiffrées · Secret professionnel
       </div>
     </div>
