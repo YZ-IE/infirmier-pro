@@ -1,3 +1,4 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.score;
@@ -16,6 +17,7 @@ export default function EVA() {
 
   return (
     <div style={{padding:'14px'}}>
+      <MedicalDisclaimer level="standard" />
       <div style={{display:'flex',gap:7,marginBottom:14}}>
         {[['EN','Numérique'],['EVA','Analogique'],['FACES','Visages'],['FLACC','FLACC']].map(([id,lbl])=>(
           <button key={id} onClick={()=>{setType(id);setScore(null);}} style={{flex:1,fontSize:11,padding:'7px 4px',background:type===id?C+'22':T.surface,border:`1px solid ${type===id?C:T.border}`,borderRadius:7,color:type===id?C:T.muted,fontWeight:700,cursor:'pointer'}}>{lbl}</button>

@@ -1,3 +1,4 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.iatr;
@@ -66,6 +67,7 @@ export default function Nutrition({ onBack }) {
 
   return (
     <div style={{ padding: '14px' }}>
+      <MedicalDisclaimer level="calcul" />
       <div style={{ ...s.card, background: C + '11', border: `1px solid ${C}33`, marginBottom: 14 }}>
         <div style={{ color: C, fontWeight: 700, fontSize: 13 }}>🥗 Calculateur Nutrition Parentérale / Entérale</div>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 3 }}>Harris-Benedict révisé (Mifflin-St Jeor) · Apports calorico-protéiques · Osmolarité</div>

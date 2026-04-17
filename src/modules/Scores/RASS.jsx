@@ -1,3 +1,5 @@
+import { ClinicalSource } from '../../components/ClinicalSource.jsx';
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.score;
@@ -31,6 +33,7 @@ export default function RASS() {
 
   return (
     <div style={{ padding: '14px', paddingBottom: 40 }}>
+      <MedicalDisclaimer level="standard" />
       {/* Info */}
       <div style={{ ...s.card, background: T.scoreDim, marginBottom: 14 }}>
         <div style={{ color: C, fontWeight: 700, fontSize: 15, marginBottom: 4 }}>RASS — Richmond Agitation-Sedation Scale</div>
@@ -120,6 +123,7 @@ export default function RASS() {
           </div>
         ))}
       </div>
+      <ClinicalSource sourceKey="RASS" />
     </div>
   );
 }

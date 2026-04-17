@@ -1,3 +1,5 @@
+import { ClinicalSource } from '../../components/ClinicalSource.jsx';
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.score;
@@ -31,6 +33,7 @@ export default function NIHSS() {
 
   return (
     <div style={{ padding: '14px' }}>
+      <MedicalDisclaimer level="standard" />
       <div style={{ ...s.card, background: C + '11', border: `1px solid ${C}33`, marginBottom: 14 }}>
         <div style={{ color: C, fontWeight: 700, fontSize: 13 }}>NIHSS — National Institutes of Health Stroke Scale</div>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 3 }}>Score 0–42 · Évaluation neuro post-AVC · {filled}/{ITEMS.length} items</div>
@@ -64,6 +67,7 @@ export default function NIHSS() {
           </div>
         ))}
       </div>
+      <ClinicalSource sourceKey="NIHSS" />
     </div>
   );
 }

@@ -1,0 +1,38 @@
+/**
+ * clinicalVersion.js — Registre des sources cliniques
+ * Conformité MDR art. 10. Révision annuelle → CLINICAL_REVIEW.md
+ */
+export const CLINICAL_SOURCES = {
+  RCP:          { ref: 'ERC Guidelines 2021', updated: '2021-10' },
+  AVC:          { ref: 'ESO Guidelines 2021', updated: '2021-03' },
+  SEPSIS:       { ref: 'Surviving Sepsis Campaign 2021', updated: '2021-10' },
+  ANAPHYLAXIE:  { ref: 'SFAR/SFMU 2023', updated: '2023-06' },
+  OAP:          { ref: 'ESC Acute Heart Failure 2021', updated: '2021-08' },
+  CONVULSIONS:  { ref: 'ILAE Status Epilepticus 2022', updated: '2022' },
+  GLASGOW:      { ref: 'Teasdale & Jennett 1974, révisé 2018', updated: '2018' },
+  QSOFA:        { ref: 'Singer et al. JAMA 2016 (Sepsis-3)', updated: '2016-02' },
+  SOFA:         { ref: 'Vincent et al. ICM 1996', updated: '1996' },
+  NEWS2:        { ref: 'Royal College of Physicians 2017', updated: '2017-12' },
+  RASS:         { ref: 'Sessler et al. AJRCCM 2002', updated: '2002' },
+  CPOT:         { ref: 'Gélinas et al. Am J Crit Care 2006', updated: '2006' },
+  NIHSS:        { ref: 'NIH Stroke Scale 2001', updated: '2001' },
+  EVA:          { ref: 'SFETD — Échelle Visuelle Analogique', updated: '2010' },
+  WELLS_TVP:    { ref: 'Wells et al. Ann Intern Med 1998', updated: '1998' },
+  PSI:          { ref: 'Fine et al. NEJM 1997 (PORT Score)', updated: '1997' },
+  CIWA:         { ref: 'Sullivan et al. Br J Addict 1989', updated: '1989' },
+  BRADEN:       { ref: 'Braden & Bergstrom 1987', updated: '1987' },
+  NORTON:       { ref: 'Norton et al. 1962', updated: '1962' },
+  WATERLOW:     { ref: 'Waterlow 1985', updated: '1985' },
+  MORSE:        { ref: 'Morse et al. 1989', updated: '1989' },
+  MMSE:         { ref: 'Folstein et al. 1975', updated: '1975' },
+  GDS:          { ref: 'Yesavage et al. 1982', updated: '1982' },
+  CAM:          { ref: 'Inouye et al. 1990', updated: '1990' },
+  CHILD_PUGH:   { ref: 'Child & Turcotte 1964, Pugh 1973', updated: '1973' },
+  RANKIN:       { ref: 'Rankin 1957, mRS van Swieten 1988', updated: '1988' },
+  COCKCROFT:    { ref: 'Cockcroft & Gault 1976', updated: '1976' },
+  NAS:          { ref: 'Miranda et al. ICM 2003', updated: '2003' },
+  PHQ9:         { ref: 'Kroenke et al. JGIM 2001', updated: '2001' },
+  INTERACTIONS: { ref: 'Thésaurus ANSM 2024 + Vidal', updated: '2024-01', note: 'Base non exhaustive — consulter le pharmacien.' },
+  POSOLOGIES:   { ref: 'RCP fabricants + Vidal 2024', updated: '2024' },
+  OPIOIDS:      { ref: 'SFAP/SFAR 2020', updated: '2020', note: 'Valider avec le prescripteur.' },
+};

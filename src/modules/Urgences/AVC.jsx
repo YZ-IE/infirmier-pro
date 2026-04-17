@@ -1,3 +1,5 @@
+import { ClinicalSource } from '../../components/ClinicalSource.jsx';
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.urg;
@@ -8,6 +10,7 @@ export default function AVC() {
 
   return (
     <div style={{padding:'14px'}}>
+      <MedicalDisclaimer level="standard" />
       <div style={{background:'#2e1065',border:'1px solid #8b5cf644',borderRadius:8,padding:'10px 14px',marginBottom:14}}>
         <div style={{color:'#a78bfa',fontWeight:700,fontSize:13}}>⏰ LE TEMPS C&apos;EST DU CERVEAU</div>
         <div style={{color:T.muted,fontSize:12,marginTop:3}}>2 millions de neurones meurent par minute · Objectif : thrombolyse &lt; 4h30</div>
@@ -62,6 +65,7 @@ export default function AVC() {
           </div>
         ))}
       </div>
+      <ClinicalSource sourceKey="AVC" />
     </div>
   );
 }

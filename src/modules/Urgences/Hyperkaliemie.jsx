@@ -1,8 +1,10 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { T, s } from '../../theme.js';
 const C = T.urg;
 export default function Hyperkaliemie() {
   return (
     <div style={{ padding: '14px' }}>
+      <MedicalDisclaimer level="standard" />
       <div style={{ background: C+'18', border: `1px solid ${C}44`, borderRadius: 10, padding: '12px 14px', marginBottom: 14 }}>
         <div style={{ color: C, fontWeight: 700, fontSize: 14 }}>⚡ Hyperkaliémie — Urgence vitale si K⁺ &gt; 6,5 mmol/L</div>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 4 }}>Appeler le médecin immédiatement · Scope · ECG en urgence</div>

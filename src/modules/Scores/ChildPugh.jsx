@@ -1,3 +1,4 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.score;
@@ -39,6 +40,7 @@ export default function ChildPugh() {
 
   return (
     <div style={{ padding: '14px' }}>
+      <MedicalDisclaimer level="standard" />
       <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
         {[['cp', '🫀 Child-Pugh'], ['meld', '🧬 MELD']].map(([m, l]) => (
           <button key={m} onClick={() => setMode(m)}

@@ -1,8 +1,11 @@
+import { ClinicalSource } from '../../components/ClinicalSource.jsx';
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { T, s } from '../../theme.js';
 const C = T.urg;
 export default function Anaphylaxie() {
   return (
     <div style={{padding:'14px'}}>
+      <MedicalDisclaimer level="standard" />
       <div style={{background:'#450a0a',border:`1px solid ${C}44`,borderRadius:8,padding:'10px 14px',marginBottom:14}}>
         <div style={{color:'#ef4444',fontWeight:700}}>🚨 ADRÉNALINE = TRAITEMENT DE 1ère INTENTION</div>
         <div style={{color:T.muted,fontSize:12,marginTop:2}}>Ne jamais attendre pour injecter l&apos;adrénaline</div>
@@ -20,6 +23,7 @@ export default function Anaphylaxie() {
           {step.content.map((line,j)=><div key={j} style={{color:T.text,fontSize:13,padding:'2px 0'}}>• {line}</div>)}
         </div>
       ))}
+      <ClinicalSource sourceKey="ANAPHYLAXIE" />
     </div>
   );
 }

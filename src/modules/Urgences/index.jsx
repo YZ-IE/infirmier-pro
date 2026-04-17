@@ -63,7 +63,7 @@ export default function Urgences({ onBack, initialTool = null, onFavChange }) {
         {PROTOS.map(p => (
           <div key={p.id} style={{ ...s.card, display:'flex', alignItems:'center', gap:14, borderColor:p.urgent ? C+'44' : T.border }}>
             <span style={{ fontSize:28 }}>{p.icon}</span>
-            <div style={{ flex:1 }} onClick={() => setProto(p.id)} style={{ flex:1, cursor:'pointer' }}>
+            <div style={{ flex:1, cursor:'pointer' }} onClick={() => setProto(p.id)}>
               <div style={{ color:p.urgent ? C : T.text, fontWeight:700, fontSize:14, marginBottom:2 }}>{p.label}</div>
               <div style={{ color:T.muted, fontSize:12 }}>{p.sub}</div>
             </div>

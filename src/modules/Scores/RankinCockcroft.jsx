@@ -1,3 +1,4 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.score;
@@ -33,6 +34,7 @@ export default function RankinCockcroft() {
 
   return (
     <div style={{ padding: '14px' }}>
+      <MedicalDisclaimer level="standard" />
       <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
         {[['rankin', '🧠 Rankin modifié'], ['cock', '🫘 Cockcroft IR']].map(([m, l]) => (
           <button key={m} onClick={() => setMode(m)}

@@ -1,3 +1,4 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.score;
@@ -82,6 +83,7 @@ export default function SOFA() {
 
   return (
     <div style={{ padding: '14px' }}>
+      <MedicalDisclaimer level="standard" />
       <div style={{ ...s.card, background: '#1e1b4b' }}>
         <div style={{ color: C, fontWeight: 700, marginBottom: 4 }}>Score SOFA</div>
         <div style={{ color: T.muted, fontSize: 12 }}>Sequential Organ Failure Assessment — Évaluation de la défaillance multi-organe en réanimation</div>

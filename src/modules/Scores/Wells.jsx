@@ -1,3 +1,5 @@
+import { ClinicalSource } from '../../components/ClinicalSource.jsx';
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.score;
@@ -39,6 +41,7 @@ export default function Wells() {
 
   return (
     <div style={{ padding: '14px' }}>
+      <MedicalDisclaimer level="standard" />
       {/* Mode TVP / EP */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
         {[['tvp', '🦵 TVP'], ['ep', '🫁 EP']].map(([m, l]) => (
@@ -80,6 +83,7 @@ export default function Wells() {
           </div>
         ))}
       </div>
+      <ClinicalSource sourceKey="WELLS_TVP" />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.score;
@@ -27,6 +28,7 @@ export default function MMSE() {
   const done=Object.keys(scores).length===SECTIONS.length;
   return (
     <div style={{padding:'14px'}}>
+      <MedicalDisclaimer level="standard" />
       <div style={{...s.card,background:'#1a1a2e'}}>
         <div style={{color:C,fontWeight:700,marginBottom:4}}>Mini Mental State Examination</div>
         <div style={{color:T.muted,fontSize:12}}>Score total : 30 points · Seuil pathologique : &lt; 24 (selon âge et niveau scolaire)</div>

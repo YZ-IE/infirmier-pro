@@ -1,3 +1,4 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.score;
@@ -17,6 +18,7 @@ export default function CAM() {
 
   return (
     <div style={{ padding: '14px' }}>
+      <MedicalDisclaimer level="standard" />
       <div style={{ ...s.card, background: '#1e1b4b' }}>
         <div style={{ color: C, fontWeight: 700, marginBottom: 4 }}>CAM — Confusion Assessment Method</div>
         <div style={{ color: T.muted, fontSize: 12 }}>Dépistage du syndrome confusionnel (délirium). Critères 1+2+3 ou 1+2+4 requis.</div>

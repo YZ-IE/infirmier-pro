@@ -1,3 +1,4 @@
+import { ClinicalSource } from '../../components/ClinicalSource.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.iatr;
@@ -187,6 +188,7 @@ export default function Interactions({ onBack }) {
           </div>
         )}
       </div>
+      <ClinicalSource sourceKey="INTERACTIONS" />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.score;
@@ -23,6 +24,7 @@ export default function NAS() {
   const getLabel=t=>t<50?'Charge légère':t<80?'Charge modérée':'Charge lourde (>1 infirmier)';
   return (
     <div style={{padding:'14px'}}>
+      <MedicalDisclaimer level="standard" />
       <div style={{...s.card,background:'#1a1a2e'}}>
         <div style={{color:C,fontWeight:700,marginBottom:4}}>Nursing Activities Score</div>
         <div style={{color:T.muted,fontSize:12}}>Évalue la charge en soins infirmiers sur 24h · Score 100% = 1 infirmier à temps plein</div>

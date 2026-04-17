@@ -1,3 +1,5 @@
+import { ClinicalSource } from '../../components/ClinicalSource.jsx';
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.score;
@@ -7,6 +9,7 @@ export default function QSOFA() {
   const done=Object.values(sel).every(v=>v!==null);
   return (
     <div style={{padding:'14px'}}>
+      <MedicalDisclaimer level="standard" />
       <div style={{...s.card,background:'#1a1a2e',border:`1px solid ${C}44`}}>
         <div style={{color:C,fontWeight:700,fontSize:14,marginBottom:6}}>Score qSOFA — Dépistage Sepsis</div>
         <div style={{color:T.muted,fontSize:13}}>1 point par critère présent · Score ≥ 2 = risque élevé de mauvaise évolution</div>
@@ -35,6 +38,7 @@ export default function QSOFA() {
           {score>=2&&<div style={{color:T.muted,fontSize:12,marginTop:6}}>→ Bundle Sepsis 1h · Hémocultures · ATB · Lactates · Médecin en urgence</div>}
         </div>
       )}
+      <ClinicalSource sourceKey="QSOFA" />
     </div>
   );
 }

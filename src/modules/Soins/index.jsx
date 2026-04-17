@@ -59,7 +59,7 @@ export default function Soins({ onBack, initialTool = null, onFavChange }) {
         {SOINS_LIST.map(o => (
           <div key={o.id} style={{ ...s.card, display:'flex', alignItems:'center', gap:14 }}>
             <span style={{ fontSize:28 }}>{o.icon}</span>
-            <div style={{ flex:1 }} onClick={() => setOutil(o.id)} style={{ flex:1, cursor:'pointer' }}>
+            <div style={{ flex:1, cursor:'pointer' }} onClick={() => setOutil(o.id)}>
               <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:2 }}>
                 <span style={{ color:T.text, fontWeight:700, fontSize:14 }}>{o.label}</span>
                 {o.badge && <span style={{ background:C+'22', color:C, fontSize:9, fontFamily:'monospace', padding:'2px 7px', borderRadius:10 }}>{o.badge}</span>}

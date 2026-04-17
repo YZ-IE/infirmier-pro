@@ -1,8 +1,10 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { T, s } from '../../theme.js';
 const C = T.urg;
 export default function Convulsions() {
   return (
     <div style={{padding:'14px'}}>
+      <MedicalDisclaimer level="standard" />
       {[
         {title:'PENDANT LA CRISE',color:'#f97316',content:['Sécuriser l\'environnement (retirer objets dangereux)','Allonger en position latérale de sécurité (après)','Ne PAS mettre d\'objet dans la bouche','Ne PAS immobiliser les membres','Chronométrer la durée','O₂ si possible · Appel médecin si > 5 min']},
         {title:'TRAITEMENT MÉDICAL',color:'#ef4444',content:['Diazépam IR : 10 mg (adulte) — 1ère intention si pas de VVP','Clonazépam (Rivotril) IV : 1 mg lent (2 min)','Midazolam IM/IN : 10 mg si pas d\'accès veineux','État de mal > 30 min : Phénytoïne ou Lévétiracétam IV','Phénobarbital si réfractaire']},

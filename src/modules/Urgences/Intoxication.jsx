@@ -1,3 +1,4 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.urg;
@@ -27,6 +28,7 @@ export default function Intoxication() {
 
   if (selected) return (
     <div style={{ padding: '14px' }}>
+      <MedicalDisclaimer level="standard" />
       <button onClick={() => setSelected(null)} style={{ ...s.btn(C), marginBottom: 14 }}>← Retour</button>
       <div style={{ background: C+'18', border: `1px solid ${C}44`, borderRadius: 10, padding: '12px 14px', marginBottom: 14 }}>
         <div style={{ color: C, fontWeight: 700, fontSize: 14 }}>{selected.toxique}</div>

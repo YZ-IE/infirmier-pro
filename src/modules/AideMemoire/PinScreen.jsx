@@ -1,6 +1,6 @@
 /**
- * PinScreen.jsx — Aide-Mémoire v5
- * Remplacement du PIN 4 chiffres par mot de passe robuste (≥8 car.)
+ * PinScreen.jsx — Aide-Mémoire v6
+ * Remplacement du PIN 4 chiffres par mot de passe robuste (≥12 car.) — ANSSI données sensibles
  * Conformité ANSSI/CNIL : complexité, verrouillage, indicateur de force
  */
 
@@ -18,7 +18,7 @@ const ACCENT = '#6366f1';
 
 function assessPassword(pwd) {
   const checks = [
-    { ok: pwd.length >= 8,            label: '≥ 8 caractères' },
+    { ok: pwd.length >= 12,           label: '≥ 12 caractères' },
     { ok: /[A-Z]/.test(pwd),          label: 'Majuscule'       },
     { ok: /[a-z]/.test(pwd),          label: 'Minuscule'       },
     { ok: /\d/.test(pwd),             label: 'Chiffre'         },
@@ -31,7 +31,7 @@ function assessPassword(pwd) {
     checks, score,
     label: labels[score],
     color: colors[score],
-    ok:    score >= 3 && pwd.length >= 8,
+    ok:    score >= 3 && pwd.length >= 12,
   };
 }
 
@@ -125,7 +125,7 @@ export default function PinScreen({ pinExists, accentColor, onUnlocked, onBack }
       <button onClick={onBack} style={{ position: 'absolute', top: 20, left: 16, background: 'none', border: 'none', color: T.muted, fontSize: 24, cursor: 'pointer' }}>←</button>
       <div style={{ fontSize: 48, marginBottom: 16 }}>🔐</div>
       <div style={{ color: T.text, fontSize: 20, fontWeight: 700, marginBottom: 6, textAlign: 'center' }}>Créer votre mot de passe</div>
-      <div style={{ color: T.muted, fontSize: 13, marginBottom: 28, textAlign: 'center' }}>Protège vos données patients · Minimum 8 caractères</div>
+      <div style={{ color: T.muted, fontSize: 13, marginBottom: 28, textAlign: 'center' }}>Protège vos données patients · Minimum 12 caractères (ANSSI)</div>
 
       <div style={{ width: '100%', maxWidth: 340 }}>
         {/* Champ */}

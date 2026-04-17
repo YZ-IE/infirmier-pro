@@ -1,3 +1,5 @@
+import { ClinicalSource } from '../../components/ClinicalSource.jsx';
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.score;
@@ -24,6 +26,7 @@ export default function Braden() {
   const done=vals.length===ITEMS.length;
   return (
     <div style={{padding:'14px'}}>
+      <MedicalDisclaimer level="standard" />
       {ITEMS.map(item=>(
         <div key={item.key} style={s.card}>
           <div style={{color:C,fontFamily:'monospace',fontSize:12,marginBottom:10}}>{item.label}</div>
@@ -41,6 +44,7 @@ export default function Braden() {
         <div style={{color:done?getColor(total):T.muted,fontSize:15,fontWeight:600,marginTop:4}}>{done?getRisk(total):'Compléter'}</div>
         {done&&total<=18&&<div style={{color:T.muted,fontSize:12,marginTop:6}}>→ Protocole prévention escarre · Matelas adapté · Repositionnement /2h</div>}
       </div>
+      <ClinicalSource sourceKey="BRADEN" />
     </div>
   );
 }

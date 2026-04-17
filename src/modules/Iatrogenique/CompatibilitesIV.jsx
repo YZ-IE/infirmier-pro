@@ -1,3 +1,4 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.iatr;
@@ -99,6 +100,7 @@ export default function CompatibilitesIV({ onBack }) {
 
   return (
     <div style={{ minHeight: '100vh', background: T.bg, paddingBottom: 40 }}>
+      <MedicalDisclaimer level="calcul" />
       <div style={{ background: T.iatrDim, borderBottom: `1px solid ${C}44`, padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, position: 'sticky', top: 0, zIndex: 10 }}>
         <button onClick={onBack} style={{ background: 'none', border: 'none', color: C, fontSize: 20, cursor: 'pointer' }}>←</button>
         <div>

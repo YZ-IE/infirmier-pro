@@ -1,3 +1,4 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.score;
@@ -52,6 +53,7 @@ export default function CIWA() {
 
   return (
     <div style={{ padding: '14px' }}>
+      <MedicalDisclaimer level="standard" />
       <div style={{ ...s.card, background: '#ef444411', border: '1px solid #ef444433', marginBottom: 14 }}>
         <div style={{ color: '#ef4444', fontWeight: 700, fontSize: 13 }}>CIWA-Ar — Sevrage alcool</div>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 3 }}>Clinical Institute Withdrawal Assessment · Score max : 67 · {filled}/{ITEMS.length} items</div>

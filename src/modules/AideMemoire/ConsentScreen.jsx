@@ -11,16 +11,16 @@
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 
-export const CONSENT_KEY = 'am_consent_v1';
+export const CONSENT_KEY = 'am_consent_v2';
 
 export function isConsentGiven() {
-  try { return !!localStorage.getItem(CONSENT_KEY); } catch { return false; }
+  try { return !!localStorage.getItem('am_consent_v2'); } catch { return false; }
 }
 
 function saveConsent() {
   localStorage.setItem(CONSENT_KEY, JSON.stringify({
     date:    new Date().toISOString(),
-    version: 1,
+    version: 2,
   }));
 }
 
@@ -62,7 +62,17 @@ const SECTIONS = [
   {
     icon: '👤',
     title: 'Droits des personnes concernées',
-    content: "Les patients ont le droit d'accéder à leurs données, de les rectifier et de demander leur effacement (RGPD art. 15-17). Ces droits s'exercent auprès de vous directement, en tant que responsable du traitement.",
+    content: "Les patients ont le droit d'accéder à leurs données (art. 15), de les rectifier (art. 16), d'en demander l'effacement (art. 17) et d'en obtenir la portabilité (art. 20). Ces droits s'exercent auprès de vous directement, en tant que responsable du traitement.",
+  },
+  {
+    icon: '📣',
+    title: 'Réclamation CNIL (art. 13.2.d)',
+    content: "Si vous estimez que le traitement de données ne respecte pas la réglementation, vous pouvez déposer une réclamation auprès de la CNIL : www.cnil.fr — 3 Place de Fontenoy, 75007 Paris.",
+  },
+  {
+    icon: '📧',
+    title: 'Contact éditeur',
+    content: "Pour exercer vos droits : [EMAIL_EDITEUR_A_COMPLETER]. En cas de violation de données, notification CNIL dans les 72h (art. 33 RGPD).",
   },
   {
     icon: '🔐',
@@ -136,7 +146,7 @@ export default function ConsentScreen({ onAccepted }) {
         <div style={{ background: '#0a0f1a', border: '1px solid #1e293b', borderRadius: 10, padding: '12px 14px', marginBottom: 20 }}>
           <div style={{ color: '#64748b', fontSize: 11, fontFamily: 'monospace', letterSpacing: 0.5, marginBottom: 6 }}>RÉFÉRENCES LÉGALES</div>
           {[
-            'RGPD (UE) 2016/679 — art. 6, 9, 13, 15-17, 25, 32',
+            'RGPD (UE) 2016/679 — art. 6, 9, 13, 15-17, 20, 25, 32, 33-34, 77',
             'Loi Informatique et Libertés n°78-17',
             'CSP art. R.4311-5 — Rôle propre infirmier',
             'CSP art. L.1111-8 — Hébergement données de santé',
@@ -202,7 +212,7 @@ export default function ConsentScreen({ onAccepted }) {
 
         <div style={{ color: '#334155', fontSize: 11, textAlign: 'center', marginTop: 12, lineHeight: 1.5 }}>
           Ce consentement est enregistré localement sur votre appareil.{'\n'}
-          Version 1 · {new Date().toLocaleDateString('fr-FR')}
+          Version 2 · {new Date().toLocaleDateString('fr-FR')}
         </div>
       </div>
     </div>

@@ -1,3 +1,5 @@
+import { ClinicalSource } from '../../components/ClinicalSource.jsx';
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.urg;
@@ -6,6 +8,7 @@ export default function Sepsis() {
   const score = Object.values(qsofa).filter(Boolean).length;
   return (
     <div style={{padding:'14px'}}>
+      <MedicalDisclaimer level="standard" />
       <div style={s.card}>
         <div style={{color:C,fontFamily:'monospace',fontSize:11,letterSpacing:2,marginBottom:12}}>SCORE qSOFA — DÉPISTAGE RAPIDE</div>
         {[
@@ -39,6 +42,7 @@ export default function Sepsis() {
           </div>
         ))}
       </div>
+      <ClinicalSource sourceKey="SEPSIS" />
     </div>
   );
 }

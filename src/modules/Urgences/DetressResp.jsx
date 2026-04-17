@@ -1,8 +1,10 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { T, s } from '../../theme.js';
 const C = T.urg;
 export default function DetressResp() {
   return (
     <div style={{padding:'14px'}}>
+      <MedicalDisclaimer level="standard" />
       {[
         {title:'OAP — Œdème Aigu du Poumon',color:'#8b5cf6',content:['Position assise jambes pendantes','O₂ haut débit (VNI si SpO₂ < 90%)','Furosémide IV : 40-80 mg selon prescription','Dérivés nitrés si PA > 100 mmHg (Risordan)','Scope · PA · SpO₂ · ECG · Prélèvements','Préparer VNI (PEP 5 cmH₂O, FiO₂ 40%)']},
         {title:'Bronchospasme / Asthme',color:'#06b6d4',content:['Salbutamol nébulisé : 5 mg (répétable)','O₂ pour maintenir SpO₂ > 94%','Corticoïdes : Méthylprednisolone 1 mg/kg IV','Si grave : Adrénaline SC 0,5 mg','Surveillance DEP, FR, tirage, SpO₂','Préparer intubation si aggravation']},

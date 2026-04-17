@@ -1,3 +1,4 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { T, s } from '../../theme.js';
 const C = T.urg;
 const CHOCS = [
@@ -9,6 +10,7 @@ const CHOCS = [
 export default function ChocEtats() {
   return (
     <div style={{padding:'14px'}}>
+      <MedicalDisclaimer level="standard" />
       {CHOCS.map((choc,i)=>(
         <div key={i} style={{...s.card,borderLeft:`3px solid ${choc.color}`,marginBottom:12}}>
           <div style={{color:choc.color,fontWeight:700,fontSize:15,marginBottom:10}}>Choc {choc.type}</div>

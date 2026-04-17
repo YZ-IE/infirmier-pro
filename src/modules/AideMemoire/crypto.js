@@ -1,11 +1,13 @@
 /**
- * crypto.js — Aide-Mémoire v2
+ * crypto.js — Aide-Mémoire v3
  * AES-256-GCM · PBKDF2 100 000 iter · SHA-256
- * Correctifs CNIL/ANSSI : verrouillage 5 tentatives · timeout session
- * Transfert v2 : PBKDF2(code, IV) symétrique — corrige bug déchiffrement
+ * v3 : getSalt() async — prête pour Android Keystore via SecureStoragePlugin
+ *      resetAll() async — purge cohérente
  */
 
-const SALT_KEY    = 'am_salt';
+// SecureStorage : installer @aparajita/capacitor-secure-storage pour activer le Keystore.
+// En attendant, fallback localStorage sécurisé par allowBackup=false.
+const SALT_KEY = 'am_salt';
 const CHECK_KEY   = 'am_check';
 const LOCKOUT_KEY = 'am_lockout';
 
@@ -27,7 +29,7 @@ function hexToBytes(hex) {
 export function bytesToBase64(bytes) { return btoa(String.fromCharCode(...bytes)); }
 export function base64ToBytes(b64)   { return Uint8Array.from(atob(b64), c => c.charCodeAt(0)); }
 
-function getSalt() {
+async function getSalt() {
   let h = localStorage.getItem(SALT_KEY);
   if (!h) { const r = crypto.getRandomValues(new Uint8Array(16)); h = bytesToHex(r); localStorage.setItem(SALT_KEY, h); }
   return hexToBytes(h);
@@ -78,7 +80,7 @@ export function recordFailure() {
 export function isPinSet() { return Promise.resolve(!!localStorage.getItem(CHECK_KEY)); }
 
 export async function createPin(pin) {
-  const key = await deriveKey(pin, getSalt());
+  const key = await deriveKey(pin, await getSalt());
   localStorage.setItem(CHECK_KEY, await encrypt(key, 'AM_SECRET_OK'));
   clearLockout();
   return key;
@@ -88,7 +90,7 @@ export async function verifyPin(pin) {
   const stored = localStorage.getItem(CHECK_KEY);
   if (!stored) return null;
   try {
-    const key   = await deriveKey(pin, getSalt());
+    const key   = await deriveKey(pin, await getSalt());
     const plain = await decrypt(key, stored);
     if (plain === 'AM_SECRET_OK') { clearLockout(); return key; }
     return null;
@@ -107,7 +109,7 @@ export async function secureSet(key, value, cryptoKey) {
 
 export function secureRemove(key) { localStorage.removeItem('am_' + key); }
 
-export function resetAll() {
+export async function resetAll() {
   Object.keys(localStorage).filter(k => k.startsWith('am_')).forEach(k => localStorage.removeItem(k));
   [SALT_KEY, CHECK_KEY, LOCKOUT_KEY].forEach(k => localStorage.removeItem(k));
 }

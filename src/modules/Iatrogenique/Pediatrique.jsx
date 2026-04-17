@@ -1,3 +1,4 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.iatr;
@@ -68,6 +69,7 @@ export default function Pediatrique({ onBack }) {
 
   return (
     <div style={{ padding: '14px' }}>
+      <MedicalDisclaimer level="calcul" />
       <div style={{ ...s.card, background: '#ef444411', border: '1px solid #ef444433', marginBottom: 14 }}>
         <div style={{ color: '#ef4444', fontWeight: 700, fontSize: 13 }}>👶 Calculateur Pédiatrique</div>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 3 }}>Doses mg/kg · Matériel · Taille sonde IOT/NGS</div>

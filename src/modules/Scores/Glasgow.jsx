@@ -1,3 +1,5 @@
+import { ClinicalSource } from '../../components/ClinicalSource.jsx';
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.score;
@@ -14,6 +16,7 @@ export default function Glasgow() {
   const done = Object.values(sel).every(v=>v!==null);
   return (
     <div style={{padding:'14px'}}>
+      <MedicalDisclaimer level="standard" />
       {Object.entries(ITEMS).map(([key,item])=>(
         <div key={key} style={s.card}>
           <div style={{color:C,fontFamily:'monospace',fontSize:12,letterSpacing:1,marginBottom:10}}>{item.label}</div>
@@ -44,6 +47,7 @@ export default function Glasgow() {
           </div>
         ))}
       </div>
+      <ClinicalSource sourceKey="GLASGOW" />
     </div>
   );
 }

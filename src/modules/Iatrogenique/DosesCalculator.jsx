@@ -1,3 +1,4 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 
@@ -38,6 +39,7 @@ function bsa(w, h) { return Math.sqrt((w * h) / 3600); }
 function UnitSelector({ options, value, onChange }) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 6 }}>
+      <MedicalDisclaimer level="calcul" />
       {options.map(u => (
         <button key={u.id} onClick={() => onChange(u.id)} style={{
           background: value === u.id ? C + '33' : T.surface,

@@ -1,3 +1,5 @@
+import { ClinicalSource } from '../../components/ClinicalSource.jsx';
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.urg;
@@ -27,6 +29,7 @@ export default function RCP() {
 
   return (
     <div style={{padding:'14px'}}>
+      <MedicalDisclaimer level="standard" />
       <div style={{background:'#450a0a',border:`1px solid ${C}44`,borderRadius:8,padding:'10px 14px',marginBottom:14,textAlign:'center'}}>
         <div style={{color:'#ef4444',fontWeight:700,fontSize:14}}>🚨 ARRÊT CARDIO-RESPIRATOIRE</div>
         <div style={{color:T.muted,fontSize:12,marginTop:2}}>Appeler le 15 · Demander le chariot d&apos;urgence et le DEA</div>
@@ -85,6 +88,7 @@ export default function RCP() {
           <div style={{color:T.text,fontSize:12,fontFamily:'monospace'}}>📋 {d.note}</div>
         </div>
       ))}
+      <ClinicalSource sourceKey="RCP" />
     </div>
   );
 }

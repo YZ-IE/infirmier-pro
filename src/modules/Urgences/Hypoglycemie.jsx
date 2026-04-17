@@ -1,8 +1,10 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { T, s } from '../../theme.js';
 const C = T.urg;
 export default function Hypoglycemie() {
   return (
     <div style={{padding:'14px'}}>
+      <MedicalDisclaimer level="standard" />
       <div style={{background:'#2a1a00',border:`1px solid ${T.form}44`,borderRadius:8,padding:'10px 14px',marginBottom:14}}>
         <div style={{color:T.form,fontWeight:700}}>Hypoglycémie sévère : glycémie &lt; 0,50 g/L (2,8 mmol/L)</div>
       </div>

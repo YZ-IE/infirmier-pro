@@ -1,3 +1,5 @@
+import { ClinicalSource } from '../../components/ClinicalSource.jsx';
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.score;
@@ -86,6 +88,7 @@ export default function NEWS2() {
 
   return (
     <div style={{ padding: '14px' }}>
+      <MedicalDisclaimer level="standard" />
       <div style={{ ...s.card, background: '#1e1b4b' }}>
         <div style={{ color: C, fontWeight: 700, marginBottom: 4 }}>Score NEWS2</div>
         <div style={{ color: T.muted, fontSize: 12 }}>National Early Warning Score 2 — Dépistage précoce de la détérioration clinique</div>
@@ -113,6 +116,7 @@ export default function NEWS2() {
         <div style={{ color: filled ? color : T.muted, fontSize: 14, marginTop: 4 }}>{filled ? label : 'Remplissez tous les critères'}</div>
         {filled && <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}>{freq}</div>}
       </div>
+      <ClinicalSource sourceKey="NEWS2" />
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 
@@ -279,6 +280,7 @@ export default function Medicaments({ onBack }) {
 
   return (
     <div style={{ minHeight: '100vh', background: T.bg }}>
+      <MedicalDisclaimer level="standard" />
       {/* Header */}
       <div style={{ background: DIM, borderBottom: `1px solid ${C}44`, padding: '14px 16px', position: 'sticky', top: 0, zIndex: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>

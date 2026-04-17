@@ -1,3 +1,4 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.score;
@@ -56,6 +57,7 @@ export default function PHQ9HAD() {
 
   return (
     <div style={{ padding: '14px' }}>
+      <MedicalDisclaimer level="standard" />
       <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
         {[['phq9', '📋 PHQ-9'], ['had', '🧩 HAD']].map(([m, l]) => (
           <button key={m} onClick={() => { setMode(m); setSel({}); }}

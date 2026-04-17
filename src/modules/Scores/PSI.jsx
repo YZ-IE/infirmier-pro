@@ -1,3 +1,4 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.score;
@@ -67,6 +68,7 @@ export default function PSI() {
 
   return (
     <div style={{ padding: '14px' }}>
+      <MedicalDisclaimer level="standard" />
       <div style={{ ...s.card, background: C + '11', border: `1px solid ${C}33`, marginBottom: 14 }}>
         <div style={{ color: C, fontWeight: 700, fontSize: 13 }}>PSI / Score PORT — Pneumonie communautaire</div>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 3 }}>Pneumonia Severity Index · Évaluation de la sévérité et décision d'hospitalisation</div>

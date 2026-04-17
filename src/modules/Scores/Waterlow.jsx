@@ -1,3 +1,4 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.score;
@@ -48,6 +49,7 @@ export default function Waterlow() {
 
   return (
     <div style={{ padding: '14px' }}>
+      <MedicalDisclaimer level="standard" />
       <div style={{ ...s.card, background: '#1e1b4b' }}>
         <div style={{ color: C, fontWeight: 700, marginBottom: 4 }}>Score de Waterlow</div>
         <div style={{ color: T.muted, fontSize: 12 }}>Évaluation du risque d'escarres — Plus sensible que Norton pour les patients chirurgicaux</div>

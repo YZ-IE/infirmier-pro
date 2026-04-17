@@ -1,3 +1,4 @@
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.score;
@@ -22,6 +23,7 @@ export default function Norton() {
   const done = vals.length === ITEMS.length;
   return (
     <div style={{padding:'14px'}}>
+      <MedicalDisclaimer level="standard" />
       {ITEMS.map(item=>(
         <div key={item.key} style={s.card}>
           <div style={{color:C,fontFamily:'monospace',fontSize:12,marginBottom:10}}>{item.label}</div>

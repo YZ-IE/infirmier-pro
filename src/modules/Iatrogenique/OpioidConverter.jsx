@@ -1,3 +1,5 @@
+import { ClinicalSource } from '../../components/ClinicalSource.jsx';
+import { MedicalDisclaimer } from '../../components/MedicalDisclaimer.jsx';
 import { useState } from 'react';
 import { T, s } from '../../theme.js';
 const C = T.iatr;
@@ -42,6 +44,7 @@ export default function OpioidConverter() {
 
   return (
     <div style={{ padding: '14px' }}>
+      <MedicalDisclaimer level="calcul" />
       <div style={{ background: '#ef444418', border: '1px solid #ef444444', borderRadius: 10, padding: '12px 14px', marginBottom: 14 }}>
         <div style={{ color: '#ef4444', fontWeight: 700, fontSize: 13 }}>⚠️ Convertisseur opioïdes</div>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 3 }}>Ratios d'équianalgésie approximatifs · Toujours débuter à 50–75% de la dose calculée · Adapter selon réponse clinique et tolérance · Prescription médicale obligatoire</div>
@@ -126,6 +129,7 @@ export default function OpioidConverter() {
           </button>
         </>
       )}
+      <ClinicalSource sourceKey="OPIOIDS" />
     </div>
   );
 }
